@@ -13,7 +13,7 @@ public class StationInfo implements Comparable<StationInfo>{
 
     public Date obtime;
 
-    public Date commtime;
+    public Date commtime = new Date(0);
 //    public String type;
 //public String getType() {
 //    return type;
