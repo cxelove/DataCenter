@@ -1,0 +1,52 @@
+{
+  "name": "WS600",
+  "channel": {
+    "W": [
+      {
+        "name": "温度",
+        "key": "T",
+        "unit": "℃"
+      },
+      {
+        "name": "湿度",
+        "key": "RH",
+        "unit": "%"
+      },
+      {
+        "name": "气压",
+        "key": "P",
+        "unit": "hPa"
+      },
+      {
+        "name": "风速",
+        "key": "WS",
+        "unit": "m/s"
+      },
+      {
+        "name": "风向",
+        "key": "WD",
+        "unit": "°"
+      },
+      {
+        "name": "指南针",
+        "key": "C",
+        "unit": "°"
+      },
+      {
+        "name": "降雨量",
+        "key": "PQ",
+        "unit": "mm"
+      },
+      {
+        "name": "降水类型",
+        "key": "PT",
+        "unit": ""
+      },
+      {
+        "name": "降水强度",
+        "key": "PI",
+        "unit": "mm/h"
+      }
+    ]
+  }
+}

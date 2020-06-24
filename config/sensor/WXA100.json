@@ -1,0 +1,81 @@
+{
+  "name": "WXA100",
+  "channel": {
+    "X": [
+      {
+        "name": "温度",
+        "key": "T",
+        "unit": "℃"
+      },
+      {
+        "name": "湿度",
+        "key": "H",
+        "unit": "%"
+      },
+      {
+        "name": "气压",
+        "key": "P",
+        "unit": "hPa"
+      }
+    ],
+    "Y": [
+      {
+        "name": "温度",
+        "key": "T",
+        "unit": "℃"
+      },
+      {
+        "name": "湿度",
+        "key": "H",
+        "unit": "%"
+      },
+      {
+        "name": "气压",
+        "key": "P",
+        "unit": "hPa"
+      },
+      {
+        "name": "风速",
+        "key": "S",
+        "unit": "m/s"
+      },
+      {
+        "name": "风向",
+        "key": "D",
+        "unit": "°"
+      }
+    ],
+    "Z": [
+      {
+        "name": "温度",
+        "key": "T",
+        "unit": "℃"
+      },
+      {
+        "name": "湿度",
+        "key": "H",
+        "unit": "%"
+      },
+      {
+        "name": "气压",
+        "key": "P",
+        "unit": "hPa"
+      },
+      {
+        "name": "风速",
+        "key": "S",
+        "unit": "m/s"
+      },
+      {
+        "name": "风向",
+        "key": "D",
+        "unit": "°"
+      },
+      {
+        "name": "降雨量",
+        "key": "R",
+        "unit": "mm"
+      }
+    ]
+  }
+}

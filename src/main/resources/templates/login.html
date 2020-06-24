@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>登录</title>
+<script src="/static/js/lib/jquery-3.3.1.min.js"></script>
+<link rel="stylesheet" href="/static/js/mylayui/css/layui.css">
+<link rel="stylesheet" href="/static/css/login.css">
+</head>
+<body>
+	<div class="container">
+
+		<h1 id="title">气象灾害监测系统</h1>
+
+
+		<form id="form" action="/login" name="f" method="post"
+			autocomplete="off">
+			<div class="input_outer">
+				<span class="u_ioc" style="background-position: -125px 0;"></span> <input
+					id="loginUsername" name="username" class="text"
+					style="color: #FFFFFF !important" type="text" placeholder="请输入账户">
+			</div>
+			<div class="input_outer">
+				<span class="u_ioc" style="background-position: -125px -34px;"></span>
+				<input id="loginPassword" name="password" autocomplete="off"
+					class="text"
+					style="color: #FFFFFF !important; position: absolute; z-index: 100;"
+					value="" type="password" placeholder="请输入密码">
+			</div>
+			<div class="input_outer">
+				<span class="u_ioc" style="background-position: -83px -155px;"></span>
+				<input id="loginCode" autocomplete="off" class="text"
+					style="width: 160px; color: #FFFFFF !important; position: absolute; z-index: 100;"
+					value="" placeholder="请输入验证码"> <input id="codeDisp"
+					class="codeInput text" type="button"
+					style="margin-left: 220px; width: 60px; text-align: left; z-index: 101; color: #D9D9D9">
+			</div>
+			<div class="mb2">
+				<a id="sub" lay-filter="sub" class="act-but submit"
+					onclick="mysubmit();" style="color: #FFFFFF">登录</a>
+			</div>
+		</form>
+
+	</div>
+	<div
+		style="text-align: center; color: #cccccc; margin-top: -25px; top: 100%; position: absolute; width: 100%">
+		<h5>安徽蓝盾光电子股份有限公司©2019</h5>
+	</div>
+	<script src="/static/js/mylayui/layui.js" type="text/javascript"></script>
+	<script>
+		function GetQueryString(name) {
+			var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+			var r = window.location.search.substr(1).match(reg);
+			if (r != null)
+				return unescape(r[2]);
+			return null;
+		}
+		layui.use([ 'layer' ], function() {
+			var layer = layui.layer;
+			$(document).ready(function() {
+				if (GetQueryString("failed") != null) {
+					layer.alert("用户名或密码错误!");
+				}
+			});
+		})
+		$(function() {
+			// 页面初始化生成验证码
+			window.onload = createCode('#codeDisp');
+			// 验证码切换
+			$('#codeDisp').click(function() {
+				createCode('#codeDisp');
+			});
+			// 登陆事件
+			$('#loginBtn').click(function() {
+				login();
+			});
+		});
+		// 生成验证码
+		function createCode(codeID) {
+			var code = "";
+			// 验证码长度
+			var codeLength = 4;
+			// 验证码dom元素
+			var checkCode = $(codeID);
+			// 验证码随机数
+			var random = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D',
+					'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+					'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' ];
+			for (var i = 0; i < codeLength; i++) {
+				// 随机数索引
+				var index = Math.floor(Math.random() * 36);
+				code += random[index];
+			}
+			// 将生成的随机验证码赋值
+			checkCode.val(code);
+		}
+		function mysubmit() {
+			var inputCode = $('#loginCode').val().toUpperCase();
+			var cardCode = $('#codeDisp').val();
+			var loginUsername = $('#loginUsername').val();
+			var loginPassword = $('#loginPassword').val();
+			if ($.trim(loginUsername) == ''
+					|| $.trim(loginUsername).length <= 0) {
+				layer.alert("用户名不能为空");
+				return false;
+			}
+			if ($.trim(loginPassword) == ''
+					|| $.trim(loginPassword).length <= 0) {
+				layer.alert("密码不能为空");
+				return false;
+			}
+			if (inputCode.length <= 0) {
+				layer.alert("验证码不能为空");
+				return false;
+			}
+			if (inputCode != cardCode) {
+				layer.alert("请输入正确验证码");
+				return false;
+			}
+			$('#form').submit();
+		}
+		
+	</script>
+
+</body>
+</html>

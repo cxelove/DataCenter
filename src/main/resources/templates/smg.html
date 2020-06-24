@@ -1,0 +1,36 @@
+<!--Created by IntelliJ IDEA.-->
+<!--User: chen-->
+<!--Date: 2019/3/25-->
+<!--Time: 14:29-->
+<!--To change this template use File | Settings | File Templates.-->
+
+<html>
+<head>
+    <title>Title</title>
+    <link rel="stylesheet" href="/static/js/mylayui/css/layui.css">
+    <link rel="stylesheet" href="/static/css/smg.css">
+</head>
+<body>
+<table class="layui-hide" id="datatable" lay-filter="list"></table>
+</body>
+<script src="/static/js/lib/jquery-3.3.1.min.js"></script>
+<script src="/static/js/lib/jquery.cookie.js"></script>
+<script src="/static/js/mylayui/layui.js"></script>
+
+<script src="/static/js/common.js"></script>
+<script src="/static/js/smg.js"></script>
+<script type="text/html" id="tablebtn">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">坐标</a>
+    <a class="layui-btn layui-btn-xs" lay-event="cmd">管理</a>
+    <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="update">升级</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<style>
+    .mytext {
+        height: 30px;
+        font-size: 16px;
+        width: 120px;
+    }
+</style>
+
+</html>

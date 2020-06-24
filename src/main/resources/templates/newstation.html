@@ -1,0 +1,219 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Insert title here</title>
+    <link rel="stylesheet" href="/static/js/mylayui/css/layui.css">
+</head>
+<body>
+<fieldset class="layui-elem-field" style="margin:20px 20px 0 20px;">
+    <legend>新建站点</legend>
+    <div class="layui-field-box" id="box1">
+        <div class="layui-form" lay-filter="demo1">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">站点名称</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="stationname" lay-verify="required" required
+                               autocomplete="off" placeholder="站点名称"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">站点号</label>
+                    <div class="layui-input-inline">
+                        <input type="tel" name="stationid" lay-verify="required" autocomplete="off"
+                               placeholder="站点号"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">站点类型</label>
+                    <div class="layui-input-inline" style="height:20px;">
+                        <select required lay-verify="protocol" lay-filter="protocol" name="protocol">
+                            <option value="">请选择</option>
+                            <option th:each="val:${protocol}" th:value="${val}" th:text="${val}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item" id="measure">
+
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo1" id="submit">创建站点</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</fieldset>
+</body>
+<script src="/static/js/mylayui/layui.js"></script>
+<script src="/static/js/lib/jquery-3.3.1.min.js"></script>
+<script>
+    layui.use(['form', 'element'], function () {
+        var url = './api/getReport';
+        var form = layui.form;
+        form.render();
+
+        //自定义验证规则
+        form.verify({
+                protocol: function (value) {
+                    if (value == "") {
+                        return "请选择站点协议";
+                    }
+                }
+            }
+        );
+        form.on('submit(demo1)', function (data) {
+            var json = JSON.stringify(data.field);
+            var loading = layer.load(1, {
+                shade: false,
+                time: 5 * 1000
+            });
+
+          //  console.log(data.field);
+            $.ajax({
+                url: "./api/createStation",
+                type: "post",
+                timeout: 5000,
+                dataType: "json",
+                contentType: "application/json",
+                data: JSON.stringify(data.field),
+                success: function (data) {
+                    layer.close(loading);
+                    layer.open({
+                        content: '创建成功!'
+                        , offset: 'rb'
+                        , icon: 1
+                        , time: 1500
+                        , end: function () {
+                            // var _body = window.parent;
+                            // var _iframe1 = _body.document.getElementById('mainiframe');
+                            // _iframe1.contentWindow.location.reload(true);
+                        }
+                    });
+                },
+                fail: function () {
+                    layer.close(loading);
+                    layer.open({
+                        content: '创建失败!'
+                        , offset: 'rb'
+                        , icon: 1
+                        , time: 1500
+                        , end: function () {
+                            // var _body = window.parent;
+                            // var _iframe1 = _body.document.getElementById('mainiframe');
+                            // _iframe1.contentWindow.location.reload(true);
+                        }
+                    });
+                }
+            });
+            return false;
+        });
+        // 监听提交
+        form.on('select(protocol)', function (data) {
+            if (data.value == '') {
+                $("#measure").empty();
+                return;
+            }
+            var loading = layer.load(1, {
+                shade: false,
+                time: 5 * 1000
+            });
+            $.ajax({
+                url: './api/getMeasureByProtocol?protocol=' + data.value,
+                type: "get",
+                timeout: 5000,
+                dataType: "json",
+                success: function (val) {
+                    var measure = {};
+                    var count ={};
+                    var widht = ($('#box1').width() - 70) / 4;
+                    $("#measure").empty();
+
+                    $.each(val, function (key, values) {
+                        //measure[]
+                        var keysplit = key.split("*");
+                        if (measure[keysplit[1]] == undefined) {
+                            measure[keysplit[1]] = '<label class="layui-form-label">';
+                            if(keysplit[1]=="null"){
+                                measure[keysplit[1]] += '其它';
+                            }else{
+                                measure[keysplit[1]] +=keysplit[1];
+                            }
+                            measure[keysplit[1]] +='</label>' +
+                                '<div class="layui-input-block">' +
+                                '<hr class="layui-bg-gray">' +
+                                '<table style="margin: 10px 35px 10px 35px;"><tr>';
+                            count[keysplit[1]] =1;
+                        }
+                        measure[keysplit[1]] += '<td style="width: ' + widht + 'px;"><input type="checkbox" name="' + keysplit[0] + '"  lay-skin="primary"  title="' + keysplit[2] + '" ';
+
+
+                        //   html += '<td style="width: '+widht+'px;"><input type="checkbox" name="'+keysplit[0]+'"  lay-skin="primary"  title="'+keysplit[3]+'" ';
+                        if (values) {
+                            measure[keysplit[1]] += ' checked ';
+                            //html+= ' checked ';
+                        }
+                        measure[keysplit[1]] += ' ></td>';
+                        // html +=' ></td>';
+
+                        if ( count[keysplit[1]] % 4 == 0) {
+                            measure[keysplit[1]] += '</tr></tr>';
+                            //  html += '</tr></tr>';
+                        }
+                        i++;
+                        count[keysplit[1]] +=1;
+                    });
+                    for (var x in measure) {
+                        measure[x] += '</tr></table></div>';
+                        console.log("=====================");
+                        console.log(measure[x]);
+                        console.log("=====================");
+                        $("#measure").append(measure[x]);
+                    }
+            layer.close(loading);
+
+                    //     $("#measure").append('<label class="layui-form-label">测量要素</label><div class="layui-input-block">');
+                    //     $("#measure").append('<hr class="layui-bg-gray">');
+                    var i = 1;
+                    // var html = '<table style="margin: 10px 35px 10px 35px;"><tr>';
+                    // $.each(val,function(key,values){
+                    //     html += '<td style="width: '+widht+'px;"><input type="checkbox" name="'+key.split(".")[0]+'"  lay-skin="primary"  title="'+key.split(".")[1]+'" ';
+                    //     if(values ){
+                    //         html+= ' checked ';
+                    //     }
+                    //     html +=' ></td>';
+                    //
+                    //     if(i%4==0){
+                    //         html += '</tr></tr>';
+                    //     }
+                    //     i++;
+                    // });
+                  //  html += '</tr></table>';
+                   // console.log(widht);
+                   // $("#measure").append(html);
+                  //  $("#measure").append('</div>');
+                    form.render();
+                },
+                fail: function () {
+                    //alert("fail");
+                }
+            })
+        });
+
+
+    });
+</script>
+</html>
+
+<style>
+    table {
+        border-collapse: collapse;
+        border-spacing: 0;
+        table-layout: fixed;
+    }
+</style>

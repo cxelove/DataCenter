@@ -1,0 +1,91 @@
+[{
+  "featureType": "building",
+  "elementType": "geometry",
+  "stylers": {
+    "visibility": "on"
+  }
+}, {
+  "featureType": "green",
+  "elementType": "geometry",
+  "stylers": {
+    "visibility": "on"
+  }
+}, {
+  "featureType": "manmade",
+  "elementType": "geometry",
+  "stylers": {
+    "visibility": "on"
+  }
+}, {
+  "featureType": "manmade",
+  "elementType": "labels",
+  "stylers": {
+    "visibility": "off"
+  }
+}, {
+  "featureType": "education",
+  "elementType": "geometry",
+  "stylers": {
+    "visibility": "on"
+  }
+}, {
+  "featureType": "education",
+  "elementType": "labels",
+  "stylers": {
+    "visibility": "off"
+  }
+}, {
+  "featureType": "scenicspots",
+  "elementType": "labels",
+  "stylers": {
+    "visibility": "off"
+  }
+}, {
+  "featureType": "scenicspots",
+  "elementType": "geometry",
+  "stylers": {
+    "visibility": "on"
+  }
+}, {
+  "featureType": "shopping",
+  "elementType": "geometry",
+  "stylers": {
+    "visibility": "off"
+  }
+}, {
+  "featureType": "medical",
+  "elementType": "labels",
+  "stylers": {
+    "visibility": "off"
+  }
+}, {
+  "featureType": "medical",
+  "elementType": "geometry",
+  "stylers": {
+    "visibility": "on"
+  }
+}, {
+  "featureType": "estate",
+  "elementType": "geometry",
+  "stylers": {
+    "visibility": "on"
+  }
+}, {
+  "featureType": "entertainment",
+  "elementType": "geometry",
+  "stylers": {
+    "visibility": "on"
+  }
+}, {
+  "featureType": "transportation",
+  "elementType": "labels",
+  "stylers": {
+    "visibility": "off"
+  }
+}, {
+  "featureType": "village",
+  "elementType": "labels",
+  "stylers": {
+    "visibility": "off"
+  }
+}]

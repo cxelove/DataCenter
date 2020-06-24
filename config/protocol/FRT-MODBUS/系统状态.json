@@ -1,0 +1,27 @@
+{
+	"name":"system",
+	"channel":{
+		"00":{
+			"01":{
+				"name":"系统状态",
+				"len":1,
+				"type":1,
+				"scale":1,
+				"content":""
+			},
+			"02":{
+				"name":"电压",
+				"len":1,
+				"type":1,
+				"scale":10,
+				"content":"ps"
+			},
+			"03":{
+				"name":"时间",
+				"len":6,
+				"type":16,
+				"content":"obtime"			
+			}
+		}
+	}	
+}

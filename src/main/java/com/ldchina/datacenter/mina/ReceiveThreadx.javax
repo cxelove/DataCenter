@@ -1,0 +1,403 @@
+package com.ldchina.datacenter.mina;
+
+import com.ldchina.datacenter.dao.entity.StationInfo;
+import org.apache.mina.core.session.IoSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Component;
+import com.alibaba.fastjson.JSON;
+import com.ldchina.datacenter.service.WebSocket;
+import com.ldchina.datacenter.types.DataInfo;
+import com.ldchina.datacenter.types.StationStatus;
+import com.ldchina.datacenter.types.StatusNo;
+import com.ldchina.datacenter.utils.DbUtil;
+import com.ldchina.datacenter.utils.TimeUtil;
+import com.ldchina.datacenter.utils.TxtUtil;
+
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+@Component
+@DependsOn("DbUtil")
+public class ReceiveThread extends Thread {
+
+
+
+
+	private final static Logger log = LoggerFactory.getLogger(ReceiveThread.class);
+	public volatile String stationId = null;
+	public IoSession ioSession = null;
+	public volatile boolean exit = false;
+	public LinkedBlockingQueue<String> linkedBlockingQueue = new LinkedBlockingQueue<String>(30);
+
+	public static Map<String, StationStatus> stationStatusMap = new HashMap<String, StationStatus>();
+
+	private static Timer timer = new Timer();
+	static {
+		List<DataInfo> list = DbUtil.dbMapperUtil.latestDataMapper.getLatestDataAll();
+		List<StationInfo> stationInfos = DbUtil.dbMapperUtil.qxStationMapper.getAllStations();
+		if (list != null) {
+			list.forEach(lst -> {
+				StationStatus stationStatus = new StationStatus(lst);
+				for (int j = 0; j < stationInfos.size(); j++) {
+					if (lst.stationId.equals(stationInfos.get(j).getStationid())) {
+						stationStatus.stationInfo = stationInfos.get(j);
+						stationInfos.remove(j);
+						break;
+					}
+				}
+				stationStatusMap.put(lst.stationId, stationStatus);
+			});
+		}
+		/**
+		 * 延迟100ms后，间隔1s打印出：hello world
+		 *
+		 * @param args
+		 * @throws InterruptedException
+		 */
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				long ms = new Date().getTime();
+				for (Map.Entry<String, StationStatus> entry : stationStatusMap.entrySet()) {
+					if (Math.abs((entry.getValue().dataInfo.obTime.getTime() - ms) / 1000 / 60) < 5) {
+						//entry.getValue().statusNo = StatusNo.STATION_ONLINE;
+					} else {
+						entry.getValue().ioSession = null;
+					}
+				}
+			}
+		}, 30000, 10000);
+	}
+
+	Date lastReuploadDateTime = new Date();
+	TxtUtil txtUtil = new TxtUtil();
+	private DbUtil dbMapperUtil = DbUtil.dbMapperUtil;
+
+	/**
+	 * 站点线程处理流程
+	 */
+	@Override
+	public void run() {
+		int updateErrorCount = 0;
+		String msg = null;
+		while (!exit) {
+			try {
+				msg = linkedBlockingQueue.poll(10, TimeUnit.MILLISECONDS);
+				if (msg != null) {
+					if (stationId != null) {
+						WebSocket webSocket = MinaTcpServerHandler.sessionsMap.get(this.stationId).webSocket;
+						if (webSocket != null) {
+							try {
+								webSocket.sendMessage(msg);
+							} catch (IOException e) {
+							}
+						}
+						StringBuffer typebuff = new StringBuffer();
+						DataInfo dataInfo = new DataInfo();
+						
+						StatusNo statusNo = msgPraser(msg, dataInfo, typebuff);
+						//这个处理采集器时钟失效的情况，用收到报文的时间来替代
+						try {
+							if(stationStatusMap.get(dataInfo.stationId) != null && stationStatusMap.get(stationId).stationInfo.noRealTime) {
+							dataInfo.obTime = new Date();
+							//System.out.print(new Date().toString());
+							}
+						}catch(Exception e){
+							
+						}
+
+						
+						switch (statusNo) {
+						case MSG_OK: {
+							dataProc(dataInfo, typebuff);
+							txtUtil.StoreRecord(msg);
+							doReupload();
+						}
+							break;
+						case MSG_NO_VALUE:
+							;
+						case MSG_NO_RECORD: {
+							dbMapperUtil.qxReuploadMapper.delete(stationId, lastReuploadDateTime);
+							doReupload();
+						}
+							break;
+						default: {
+							if (stationId != null & MinaTcpServerHandler.sessionsMap.get(stationId).updateBin != null
+									&& MinaTcpServerHandler.sessionsMap.get(stationId).updateBin.stationId != null) {
+								UpdateBin updateBin = MinaTcpServerHandler.sessionsMap.get(stationId).updateBin;
+								if (msg.contains("OK")) {
+									updateErrorCount = 0;
+									updateBin.start();
+									updateBin.timeOut = 0;
+								} else if (msg.contains("ERROR")) {
+									if (++updateErrorCount <= 3) {
+										updateBin.resendFrame();
+									} else {
+										updateErrorCount = 0;
+										updateBin.stationId = null;
+										updateBin = null;
+									}
+								}
+							}
+						}
+						}
+					}
+				}
+			} catch (Exception e) {
+				log.error("ReceiveTrdError[" + stationId + "]", e);
+			}
+		}
+	}
+
+	final String regex = "^[a-z0-9A-Z]+$";
+
+	/**
+	 * 插入数据，处理最新数据缓存
+	 * 
+	 * @param dataInfo
+	 * @return
+	 */
+	StatusNo insertLatestData(DataInfo dataInfo, StationInfo stationInfo) {
+		if (stationInfo == null) {
+			stationStatusMap.get(dataInfo.stationId).dataInfo = dataInfo.clone();
+		} else {
+			DbUtil.dbMapperUtil.qxStationMapper.saveStationInfo(stationInfo);
+			stationStatusMap.put(dataInfo.stationId, new StationStatus(dataInfo, stationInfo));
+		}
+		String sqlString = "MERGE INTO QX_LATEST ( `stationid`, `obtime`,`ps`, `data`) VALUES ( '" + dataInfo.stationId
+				+ "', '" + TimeUtil.format(dataInfo.obTime, "yyyy-MM-dd HH:mm:00") + "', '" + dataInfo.ps + "', '"
+				+ JSON.toJSONString(dataInfo.val) + "')";
+		dbMapperUtil.iSqlMapper.sqlput(sqlString); // 插入数据
+		return StatusNo.OK;
+	}
+
+	/**
+	 * 插入数据，处理最新数据缓存
+	 * 
+	 * @param dataInfo
+	 * @return
+	 */
+	StatusNo insertData(DataInfo dataInfo) {
+		if (!dataInfo.stationId.matches(regex))
+			return StatusNo.ERROR;
+
+		String sqlDataString1 = "MERGE INTO DATA_M_" + dataInfo.stationId + " ( `obTime`,`ps`,`";
+		String sqlDataString2 = ") VALUES ( '" + TimeUtil.format(dataInfo.obTime, "yyyy-MM-dd HH:mm:00") + "', '"
+				+ dataInfo.ps + "', '";
+		for (Map.Entry<String, String> entry : dataInfo.val.entrySet()) {
+			sqlDataString1 += entry.getKey() + "`,`";
+			sqlDataString2 += entry.getValue() + "','";
+		}
+		String sqlDataString = sqlDataString1.substring(0, sqlDataString1.length() - 2)
+				+ sqlDataString2.substring(0, sqlDataString2.length() - 2) + ")";
+		try {
+			dbMapperUtil.iSqlMapper.sqlput(sqlDataString); // 插入数据
+			return StatusNo.OK;
+		} catch (Exception e) {
+			// TODO: handle exception
+			log.error(stationId + ":" + stationId, e);
+			return StatusNo.ERROR;
+		}
+	}
+
+	/**
+	 * 数据库逻辑处理
+	 * 
+	 * @param dataInfo
+	 * @param typebuff
+	 */
+	private void dataProc(DataInfo dataInfo, StringBuffer typebuff) {
+		Date dateOld = null;
+		try {
+			try {
+				dateOld = dbMapperUtil.qxStationMapper.getStationLastObtime(dataInfo.stationId).getObtime();// 查询上次报文时间
+				/**
+				 * 不是新站点:1.插入数据2.处理补包3.根据补包情况确定是否更新站点信息
+				 */
+				insertData(dataInfo); // 插入数据
+				/**
+				 * 处理补包
+				 */
+				long diff = (dataInfo.obTime.getTime() - dateOld.getTime()) / 1000 / 60;
+				if (diff < 0) {
+					// 说明这条报文是补包的报文，需删除补包表即可，无须更新站点信息
+					dbMapperUtil.qxReuploadMapper.delete(stationId, dataInfo.obTime);
+				} else {
+					// 下面两种情况表示数据是最新的，需要更新站点表
+					dbMapperUtil.qxStationMapper.updateObtime(dataInfo.obTime, stationId); // 更新站点信息
+					insertLatestData(dataInfo, null);
+					if (diff > 1) {
+						// 说明中间有断报
+						double insCount = (diff > 1440 * 31) ? (1440 * 31) : diff;// 最多补10天历史记录
+						Calendar obtime = Calendar.getInstance();// 用于插入时自增时间
+						obtime.setTime(dateOld);
+						for (int i = 1; i < insCount; i++) {
+							obtime.add(Calendar.MINUTE, 1);
+							dbMapperUtil.qxReuploadMapper.save(stationId, obtime.getTime());
+						}
+					} else if (diff == 1) {
+						// 正常报文
+					}
+				}
+			} catch (NullPointerException ex) {
+				/**
+				 * 新站点处理: 1.创建数据表 2.插入数据3.插入站点信息4.添加Web_Config表5.检查serv_support_sensor表
+				 */
+				String sqlTableString = "CREATE TABLE IF NOT EXISTS DATA_M_" + dataInfo.stationId
+						+ " ( `id` BIGINT NOT NULL AUTO_INCREMENT " + ", `obtime` DATETIME PRIMARY KEY "
+						+ ", `createtime` DATETIME DEFAULT CURRENT_TIMESTAMP " + ", `ps` VARCHAR DEFAULT NULL ";
+				String sqlConfigString = "MERGE INTO `Web_Config` ( `name` )VALUES('";
+				for (Map.Entry<String, String> entry : dataInfo.val.entrySet()) {
+					sqlTableString += ", `" + entry.getKey() + "` VARCHAR DEFAULT NULL ";
+					sqlConfigString += entry.getKey() + "'),('";
+				}
+				sqlConfigString = sqlConfigString.substring(0, sqlConfigString.length() - 3);
+
+				sqlTableString += ")";
+
+				dbMapperUtil.iSqlMapper.sqlput(sqlTableString);
+				StationInfo stationInfo = new StationInfo();
+				stationInfo.stationid = stationId;
+				stationInfo.obtime = dataInfo.obTime;
+//				stationInfo.type = typebuff.toString();
+				
+				insertData(dataInfo);
+			
+				insertLatestData(dataInfo, stationInfo);
+				
+				dbMapperUtil.iSqlMapper.sqlput(sqlConfigString);
+				// serv_support_sensor
+				String sqlString = "SELECT `VALUE` FROM `serv_config` WHERE `property`='serv_current_sensor'";
+				List<Map<String, Object>> resultList = dbMapperUtil.iSqlMapper.sqlget(sqlString);
+				String typeString = ((String) resultList.get(0).get("VALUE")) + typebuff.toString();
+				typeString = removeRepeat(typeString);
+				sqlString = "UPDATE `serv_config` SET `value`='" + typeString
+						+ "' WHERE `property`='serv_current_sensor'";
+				dbMapperUtil.iSqlMapper.sqlput(sqlString);
+
+			}
+		} catch (DataAccessException e) {
+			log.error(stationId + ":" + stationId, e);
+			e.printStackTrace();
+		} catch (Exception e) {
+			log.error(stationId + ":" + stationId, e);
+			e.printStackTrace();
+			this.ioSession.close(true);
+		} finally {
+		}
+	}
+
+	/**
+	 * 补包函数，如果连续3次补包出错则放弃这条补包
+	 */
+	private int reuploadTimes = 1;
+
+	private void doReupload() {
+		Date reuploadDateTime = dbMapperUtil.qxReuploadMapper.getReupload(stationId);
+		if (reuploadDateTime != null) {
+			if (lastReuploadDateTime.equals(reuploadDateTime)) {
+				reuploadTimes++;
+			} else {
+				reuploadTimes = 1;
+			}
+			if (reuploadTimes > 3) {
+				dbMapperUtil.qxReuploadMapper.delete(stationId, lastReuploadDateTime);
+				reuploadTimes = 0;
+			} else {
+				// LocalDateTime.
+				lastReuploadDateTime = new Date(reuploadDateTime.getTime());
+				String cmd = "DOWN " + TimeUtil.format(lastReuploadDateTime, "yyyyMMddHHmm") + " 1";
+				log.info("Send Cmd To [" + stationId + "]: " + cmd);
+				MinaTcpServerHandler.sessionsMap.get(stationId).ioSession.write(cmd);
+			}
+		}
+	}
+
+	/**
+	 * 报文解析
+	 *
+	 * @param s
+	 * @param dataInfo
+	 * @param typebuff
+	 * @return 状态码
+	 */
+	private StatusNo msgPraser(String s, DataInfo dataInfo, StringBuffer typebuff) {
+//		int posion = 4;
+//		try {
+//			if (s.contains("<F>") || s.contains("<N>"))
+//				return StatusNo.MSG_NO_RECORD;
+//			if (s.contains("/////"))
+//				return StatusNo.MSG_NO_VALUE;
+//			String[] ss = s.split(",");
+//			if (ss.length < 4)
+//				return StatusNo.MSG_ERROR;
+//			if(s.charAt(0)!= '#') return StatusNo.MSG_ERROR;
+//			dataInfo.stationId = ss[0].substring(1);
+//			if (!dataInfo.stationId.matches("^[a-zA-Z0-9]+$"))
+//				return StatusNo.MSG_ERROR;
+//
+//			dataInfo.obTime = TimeUtil.parseDate(ss[2], "yyyyMMddHHmm");
+//
+//			typebuff.append(ss[3]); // 获取报文内传感器类型
+//
+//			for (int i = 0; i < ss[3].length(); i++) { // 根据报文内传感器类型字段确定有多少种传感器
+//				Character sensorKey = ss[3].charAt(i);
+//				Sensor sensor = AppConfig.sensorMap.get(sensorKey); // 获取当前Sensor类型，未区分分型号
+//				if (null != sensor) {
+//
+//					Measurement[] measurements = sensor.measurement.get(ss[3].charAt(i)); // 获取当前Sensor的测量要素，这里已经区分了同传感器的分型号
+//					for (int j = 0; j < measurements.length; j++) {
+//						String sqlK = "_" + sensorKey + ss[posion];
+//						if (Arrays.asList(measurements[j].key).contains(sqlK)) {
+//							String sqlV = null;
+//							StationStatus stationStatus = stationStatusMap.get(stationId);
+//							if (stationStatus==null || stationStatus.stationInfo.type.contains(sensorKey.toString())) {
+//								// 处理手动设置那些没有配置的传感器，部分站点虽然报文有N但是可能没有安装。
+//								sqlV = ss[posion + 1];
+//								if (!"?/".contains(sqlV)) {
+//									if (measurements[j].code != null) {
+//										try {
+//											sqlV = measurements[j].code.get(sqlV);
+//										} catch (Exception e) {
+//										}
+//									}
+//								}
+//							} else {
+//								sqlV = "---";
+//							}
+//							dataInfo.val.put(sqlK, sqlV);
+//							posion += 2;
+//						}
+//					}
+//				}
+//			}
+//			if (ss[posion].equals("PS")) {
+//				dataInfo.ps = ss[posion + 1];
+//			}
+//			return StatusNo.MSG_OK;
+//		} catch (Exception e) {
+//			log.error("fail[" + posion+"---"+s + "]:", e);
+//			e.printStackTrace();
+//			return StatusNo.MSG_ERROR;
+//		}
+		return StatusNo.MSG_ERROR;
+	}
+
+	public String removeRepeat(String str) {
+		StringBuffer sb = new StringBuffer(str);
+		String rs = sb.reverse().toString().replaceAll("(.)(?=.*\\1)", "");
+		StringBuffer out = new StringBuffer(rs);
+		return out.reverse().toString();
+	}
+}

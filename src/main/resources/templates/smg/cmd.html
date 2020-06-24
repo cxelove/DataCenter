@@ -1,0 +1,86 @@
+<!--Created by IntelliJ IDEA.-->
+<!--User: chen-->
+<!--Date: 2019/3/26-->
+<!--Time: 7:50-->
+<!--To change this template use File | Settings | File Templates.-->
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Title</title>
+    <link rel="stylesheet" href="/static/js/mylayui/css/layui.css">
+</head>
+<body>
+<div style="width:100%;text-align:center;">
+    <div class="layui-form-item layui-form-text">
+        <textarea style="height: 360px" id="textarea" class="layui-textarea"></textarea>
+    </div>
+    <div>
+        <input id="textinput" type="text" name="type" placeholder="输入命令"
+               autocomplete="off"
+               class="layui-input">
+    </div>
+    <div id="status" style="text-align: left;font-size: 12px;color: #aaa; margin: 2px 0px 2px 10px;">通讯初始化...</div>
+</div>
+</body>
+<script src="/static/js/mylayui/layui.js"></script>
+<script src="/static/js/common.js"></script>
+<script type="text/javascript" th:inline="javascript">
+    layui.use(['jquery'], function () {
+        var $ = layui.jquery;
+        textarea.scrollTop = textarea.scrollHeight;
+        var ws = null;
+        $(document).ready(function () {
+            var pathname = window.document.location.pathname;
+            if ("WebSocket" in window) {
+                // 打开一个 web socket
+                ws = new WebSocket("ws://" + window.location.host + "/websocket");
+                var stationid = /*[[${stationid}]]*/ stationid;
+                ws.onopen = function () {
+                    ws.send("*0" + stationid);
+                    $("#status").html("后台已连接...");
+                };
+
+                ws.onmessage = function (evt) {
+                    var received_msg = evt.data;
+                    if (received_msg.charAt(0) == '*') {//内部协议
+                        var innercmd = received_msg.substr(1);
+                        switch (innercmd) {
+                            case "success":
+                                $("#status").html("站点在线...");
+                                break;
+                            case "fail":
+                                $("#status").html("站点不在线,请稍后重试...");
+                                break;
+                        }
+                    } else {
+                        appendmsg(received_msg);
+                    }
+                };
+
+                ws.onclose = function () {
+                    // 关闭 websocket
+                    $("#status").html("连接已关闭...");
+                };
+            } else {
+                // 浏览器不支持 WebSocket
+                alert("您的浏览器不支持 WebSocket!");
+            }
+        });
+
+        $(document).keydown(function (e) {
+            if (e.keyCode === 13) {
+                if (ws != null) {
+                    ws.send($("#textinput").val());
+                    appendmsg($("#textinput").val());
+                }
+            }
+        });
+
+        function appendmsg(msg) {
+            var str = $('#textarea').val() + "[" + new Date().Format('hh:mm:ss') + "]  " + msg + "\r\n";
+            $('#textarea').val(str);
+            document.getElementById("textarea").scrollTop = document.getElementById("textarea").scrollHeight;
+        }
+    })
+</script>
+</html>

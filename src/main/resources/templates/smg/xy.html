@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" href="/static/js/mylayui/css/layui.css">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <style type="text/css">
+        body, html, #allmap {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            font-family: "微软雅黑";
+        }
+
+        #l-map {
+            height: 100%;
+            width: 100%;
+            /*position: relative;*/
+        }
+
+        #confirmBtn {
+            z-index:999;
+            position:absolute;
+            top:5px;
+            left:5px;
+            font-family: 微软雅黑;
+            font-size: 12px;
+            color: #0000FF;
+        }
+    </style>
+    <style type="text/css">
+        .BMap_cpyCtrl {
+            display: none;
+        }
+
+        .anchorBL {
+            display: none;
+        }
+    </style>
+    <script type="text/javascript"
+            src="http://api.map.baidu.com/getscript?v=3.0&ak=293d791d971e3120a8160304dcf8d788"></script>
+    <title>设置点是否可拖拽</title>
+</head>
+
+<body>
+<div id="l-map"></div>
+<div id="confirmBtn">
+    拖动地图和标注点选位置,选好后直接点右上角关闭
+    <!--<button id="confirm" type="button" disabled="disabled" class="layui-btn layui-btn-sm" onclick="saveXy();">-->
+        <!--确 定-->
+    <!--</button>-->
+</div>
+</body>
+</html>
+<script src="/static/js/lib/jquery-3.3.1.min.js"></script>
+<script>
+    var x=[[${qxStation.lng}]],y=[[${qxStation.lat}]];
+    function callback() {
+        if(x==0 ||y==0){
+            return 0;
+        }else
+        return {lng:x,lat:y};
+    }
+</script>
+<script type="text/javascript">
+    // 百度地图API功能
+    //浏览器定位
+    var point;
+    var map = new BMap.Map("l-map");
+    map.enableScrollWheelZoom(true); //启用地图滚轮放大缩小
+    if(x ==null || y==0){
+        var geolocation = new BMap.Geolocation();
+        geolocation.getCurrentPosition(function (r) {
+            if (this.getStatus() == BMAP_STATUS_SUCCESS) {
+                point = r.point;
+                mapConfig();
+            } else {
+                point== new BMap.Point(116.400244, 39.92556);
+                mapConfig();
+            }
+        });
+    }else{
+        point = new BMap.Point(x, y);
+        mapConfig();
+    }
+function mapConfig() {
+    map.centerAndZoom(point, 15); //定义地图等级，就是放大倍数
+    var marker = new BMap.Marker(point);// 创建标注
+    map.addOverlay(marker);  // 将标注添加到地图中
+    map.panTo(point);
+    // alert('您的位置：' + r.point.lng + ',' + r.point.lat);
+    marker.enableDragging(); //标注可拖拽
+    //marker.disableDragging();           // 不可拖拽
+    // 开启事件监听
+    marker.addEventListener("dragend", function (e) {
+        x = e.point.lng; //经度
+        y = e.point.lat; //纬度
+    });
+}
+    //关于状态码
+    //BMAP_STATUS_SUCCESS 检索成功。对应数值“0”。
+    //BMAP_STATUS_CITY_LIST 城市列表。对应数值“1”。
+    //BMAP_STATUS_UNKNOWN_LOCATION 位置结果未知。对应数值“2”。
+    //BMAP_STATUS_UNKNOWN_ROUTE 导航结果未知。对应数值“3”。
+    //BMAP_STATUS_INVALID_KEY 非法密钥。对应数值“4”。
+    //BMAP_STATUS_INVALID_REQUEST 非法请求。对应数值“5”。
+    //BMAP_STATUS_PERMISSION_DENIED 没有权限。对应数值“6”。(自 1.1 新增)
+    //BMAP_STATUS_SERVICE_UNAVAILABLE 服务不可用。对应数值“7”。(自 1.1 新增)
+    //BMAP_STATUS_TIMEOUT 超时。对应数值“8”。(自 1.1 新增)
+</script>

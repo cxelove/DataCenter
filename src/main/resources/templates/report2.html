@@ -1,0 +1,131 @@
+<!--Created by IntelliJ IDEA.-->
+<!--User: chen-->
+<!--Date: 2019/3/31-->
+<!--Time: 11:06-->
+<!--To change this template use File | Settings | File Templates.-->
+
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Title</title>
+    <link rel="stylesheet" href="/static/js/mylayui/css/layui.css">
+    <link rel="stylesheet" href="/static/css/report.css">
+</head>
+<body>
+<form class="layui-form" action="">
+
+    <div class="layui-form-item" style="height: 30px">
+        <div class="layui-inline">
+            <label class="layui-form-label">统：</label>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">站点：</label>
+            <div class="layui-input-inline" style="width: 100px">
+                <select id="ShowTemplate" name="ShowTemplate" lay-filter="ShowTemplate" lay-verify="required">
+                    <option value="">请选择</option>
+                    <option value="1">模板1</option>
+                    <option value="2">模板2</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">项目：</label>
+            <div class="layui-input-inline" style="width: 100px">
+                <select id="PrintTemplate" name="PrintTemplate" lay-filter="PrintTemplate" lay-verify="required">
+                    <option value="">请选择</option>
+                    <option value="1">模板1</option>
+                    <option value="2">模板2</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-inline">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-xs" lay-submit lay-filter="formDemo">查询</button>
+            </div>
+        </div>
+    </div>
+
+
+</form>
+
+<script>
+    //Demo
+    layui.use('form', function(){
+        var form = layui.form;
+
+        //监听提交
+        form.on('submit(formDemo)', function(data){
+            layer.msg(JSON.stringify(data.field));
+            return false;
+        });
+    });
+</script>
+<table id="datatable" lay-filter="report"></table>
+</body>
+<script src="/static/js/mylayui/layui.js"></script>
+<script src="/static/js/lib/jquery-3.3.1.min.js"></script>
+
+<script type="text/html" id="toolbarDemo">
+    <div class="mytext div-inline">收报率统计</div>
+    <input type="text" class="myinput div-inline" id="startTime">
+    <input type="text" class="myinput div-inline" id="endTime">
+    <button type="text" class="layui-btn layui-btn-xs" style="width:60px" lay-event="query">查询</button>
+</script>
+<script>
+
+    layui.use(['table', 'element'], function () {
+        var url = './api/getReport';
+        var table = layui.table;
+        table.render({
+            elem: '#datatable'
+            , url: url
+          //  , toolbar: '#toolbarDemo'
+            , height: 'full-20'
+            , done: function (res, curr, count) {
+                layui.use('laydate', function () {
+                    var laydate = layui.laydate;
+                    //执行一个laydate实例
+                    laydate.render({
+                        elem: '#startTime' //指定元素
+                    });
+                    laydate.render({
+                        elem: '#endTime' //指定元素
+                    });
+                });
+            }
+            , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+            , defaultToolbar: ['exports']
+            , cols: [
+                [
+                    {field: 'stationid', width: 100, title: '站点号', sort: true}
+                    , {field: 'alias', title: '站点名'}
+                    , {field: 'count5', width: 120, title: '5分内收报', sort: true}
+                    , {field: 'percent5', width: 140, title: '5分内收报率', sort: true}
+                    , {field: 'count15', width: 120, title: '15分内收报', sort: true} //minWidth：局部定义当前单元格的最小宽度，layui 2.2.1 新增
+                    , {field: 'percent15', width: 140, title: '15分内收报率', sort: true}
+                    , {field: 'count', width: 120, title: '总收报', sort: true}
+                    , {field: 'percent', width: 130, title: '总收报率', sort: true}
+                ]
+            ]
+        });
+        table.on('toolbar(report)', function (obj) {
+            switch (obj.event) {
+                case 'query':
+                    if (!$('#startTime').val() || !$('#endTime').val() || (Date.parse($('#startTime').val()) > Date.parse($('#endTime').val()))) {
+                        layer.msg('时间选择不正确.');
+                        return;
+                    }
+                    var startTime = $('#startTime').val();
+                    var endTime = $('#endTime').val();
+                    url = './api/getReport?startTime=' + startTime + '&endTime=' + endTime;
+                    table.reload('datatable', {
+                        url: url
+                        //,where: {} //设定异步数据接口的额外参数
+                    });
+                    $('#startTime').val(startTime);
+                    $('#endTime').val(endTime);
+                    break;
+            }
+        });
+    });
+</script>
+</html>

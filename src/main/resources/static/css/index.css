@@ -1,0 +1,9 @@
+@import "base.css";
+
+#mainiframe{
+    /*height: 100%;*/
+    width: 100%;
+}
+dd{
+    padding-left: 8px;
+}

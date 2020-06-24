@@ -1,0 +1,51 @@
+#网页标题
+webTitle: 蓝盾气象
+#网页访问端口
+webPort: 4008
+#数据接收端口
+serverPort: 4015
+#数据库端口
+databasePort: 23451
+#数据库用户名
+databaseUser: root
+#数据库密码
+databasePasswd: root
+#登录用户名
+loginName: admin
+#登录密码
+loginPassword: 12345
+
+server:
+  port: ${webPort}
+spring:
+  security:
+    user:
+      password: ${loginPassword}
+      name: ${loginName}
+  datasource:
+    data: classpath:db/data.sql
+    schema: classpath:db/schema.sql
+    username: ${databaseUser}
+    password: ${databasePasswd}
+    sql-script-encoding: utf-8
+    platform: h2
+    driverClassName: org.h2.Driver
+    url: jdbc:h2:./database/qxjtz;AUTO_RECONNECT=TRUE;
+  #url: jdbc:h2:./database/qxjtz;AUTO_SERVER=TRUE;AUTO_RECONNECT=TRUE;AUTO_SERVER_PORT=${databasePort}
+
+
+  h2:
+    console:
+      enabled: true
+      path: /h2
+      settings:
+        web-allow-others: true
+  mvc:
+    view:
+      prefix: classpath:/templates/
+      suffix: .html
+    static-path-pattern: classpath:/static/**
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
+    mode: HTML

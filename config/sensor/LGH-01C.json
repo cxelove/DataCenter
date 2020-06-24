@@ -1,0 +1,47 @@
+{
+  "name": "LGH-01C",
+  "channel": {
+    "L": [
+      {
+        "name": "风速",
+        "key": "WS",
+        "unit": "m/s"
+      },
+      {
+        "name": "风向",
+        "key": "WD",
+        "unit": "°"
+      },
+      {
+        "name": "湿度",
+        "key": "RH",
+        "unit": "%"
+      },
+      {
+        "name": "温度",
+        "key": "T",
+        "unit": "℃"
+      },
+      {
+        "name": "气压",
+        "key": "P",
+        "unit": "hPa"
+      },
+      {
+        "name": "1分钟雨量",
+        "key": "R",
+        "unit": "m"
+      },
+      {
+        "name": "1小时雨量",
+        "key": "R60",
+        "unit": "mm"
+      },
+      {
+        "name": "日照强度",
+        "key": "LI",
+        "unit": "W/㎡"
+      }
+    ]
+  }
+}

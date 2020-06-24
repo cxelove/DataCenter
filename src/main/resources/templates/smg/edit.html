@@ -1,0 +1,68 @@
+<!--Created by IntelliJ IDEA.-->
+<!--User: chen-->
+<!--Date: 2019/3/25-->
+<!--Time: 14:31-->
+<!--To change this template use File | Settings | File Templates.-->
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/static/js/mylayui/css/layui.css">
+
+</head>
+<body style="padding-top: 20px;">
+<div style="width:100%;text-align:center;">
+    <form class="layui-form" action="">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">站点</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="stationid" th:value='${stationInfo.stationid}'
+                           autocomplete="off"
+                           class="layui-input layui-disabled">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">站名</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="alias" th:value='${stationInfo.alias}'
+                           autocomplete="off"
+                           class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-ms">拾取坐标</button>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-ms" lay-submit lay-filter="formSubmit">提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary layui-btn-ms">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+<script src="/static/js/mylayui/layui.js"></script>
+<script>
+    layui.use(['form', 'layer'], function () {
+        var $ = layui.jquery;
+        var form = layui.form,
+            layer = layui.layer;
+        //监听提交
+        form.on('submit(formSubmit)', function (data) {
+            $.post("../smg/updateStationInfo", JSON.stringify(data.field), function (result) {
+                }
+            );
+            var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+            parent.layer.close(index);
+            parent.location.reload();
+        });
+    });
+</script>
+</html>

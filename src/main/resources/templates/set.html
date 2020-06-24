@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="/static/js/mylayui/css/layui.css" media="all">
+    
+<link rel="stylesheet" type="text/css" href="/static/zTree/css/zTreeStyle/zTreeStyle.css">
+
+    <!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
+</head>
+<body style="margin-left:20px;">
+<div class="layui-tab" lay-filter="test">
+    <ul class="layui-tab-title">
+        <li class="layui-this">启用传感器选择</li>
+        <li>地图显示</li>
+    </ul>
+    <div class="layui-tab-content">
+        <div class="layui-tab-item layui-show">
+        <ul id="regionZTreeList" class="ztree"></ul>
+            <button style="margin-top: 20px;margin-left: 20px;" type="button" class="layui-btn layui-btn-sm"
+                    lay-demo="getCheckedList">保存<span style="color:#FFFF00;">启用传感器</span>设置
+            </button>
+        </div>
+        <div class="layui-tab-item">
+        <ul id="regionZTreeMap" class="ztree"></ul>
+           
+            <button style="margin-top: 20px;margin-left: 20px;" type="button" class="layui-btn layui-btn-sm"
+                    lay-demo="getCheckedMap">保存<span style="color:#FFFF00;">地图显示</span>设置
+            </button>
+        </div>
+    </div>
+</div>
+</body>
+<script src="/static/js/mylayui/layui.js"></script>
+<script src="/static/zTree/js/jquery-1.4.4.min.js"></script>
+<script type="text/javascript" src="/static/zTree/js/jquery.ztree.all.min.js"></script>
+<script th:inline="javascript">
+
+var setting = {
+        view: {
+            dblClickExpand: false,//双击节点时，是否自动展开父节点的标识
+            showLine: true,//是否显示节点之间的连线
+            fontCss:{'color':'black','font-weight':'bold'},//字体样式函数
+            selectedMulti: true //设置是否允许同时选中多个节点
+        },
+        check:{
+            chkboxType: { "Y": "ps", "N": "ps" },
+            //chkboxType: { "Y": "", "N": "" },
+            chkStyle: "checkbox",//复选框类型
+            enable: true //每个节点上是否显示 CheckBox
+        },
+    /*    edit:{
+            enable: true,
+            editNameSelectAll: true,
+            showRemoveBtn : true,
+            showRenameBtn : true,
+            removeTitle : "remove",
+            renameTitle : "rename"
+        },*/
+        data: {
+            simpleData: {//简单数据模式
+                enable:true,
+                idKey: "id",
+                pIdKey: "IPARENTID",
+                rootPId: null
+            }
+        },
+        callback: {
+         //   beforeExpand:zTreeBeforeExpand, // 用于捕获父节点展开之前的事件回调函数，并且根据返回值确定是否允许展开操作
+        }
+    };
+var zTreeList = $.fn.zTree.init($("#regionZTreeList"), setting, eval("(" + [[${list}]] + ")"));
+var zTreeMap = $.fn.zTree.init($("#regionZTreeMap"), setting, eval("(" + [[${map}]] + ")"));
+
+
+
+    layui.use(['jquery','layer', 'util', 'element'], function () {
+        var $ = layui.jquery
+          //  , maptree = layui.tree
+            //, listtree = layui.tree
+            , layer = layui.layer
+            , util = layui.util
+            , element = layui.element;
+        //基本演示
+     /*   maptree.render({
+            elem: '#map'
+            , data: eval("(" + [[${map}]] + ")")
+            , showCheckbox: true  //是否显示复选框
+            , id: 'map'
+            , click: function (obj) {
+                var data = obj.data;  //获取当前点击的节点数据
+                layer.msg('状态：' + obj.state + '<br>节点数据：' + JSON.stringify(data));
+            }
+        });
+        listtree.render({
+            elem: '#list'
+            , data: eval("(" + [[${list}]] + ")")
+            , showCheckbox: true  //是否显示复选框
+            , id: 'list'
+            , click: function (obj) {
+                var data = obj.data;  //获取当前点击的节点数据
+                layer.msg('状态：' + obj.state + '<br>节点数据：' + JSON.stringify(data));
+            }
+        });
+        element.on('tab(test)', function (elem) {
+            //console.log(data);
+        });*/
+        //按钮事件
+        util.event('lay-demo', {
+        	
+            getCheckedMap: function (othis) {
+            	var nodes = zTreeMap.getNodes();
+                save(nodes, 'map'); //获取选中节点的数据
+            }
+            , getCheckedList: function (othis) {
+            	var nodes = zTreeList.getNodes();
+               // var checkedData = listtree.getChecked('list'); //获取选中节点的数据
+                save(nodes, 'list'); //获取选中节点的数据
+            }
+        });
+        var save = function (s, url) {
+            $.ajax({
+                type: "POST",
+                url: "/set/save?type=" + url,
+                async: false,
+                data: JSON.stringify(s),
+                contentType: "application/json;charset=UTF-8",
+                /*如果不写这个,仔细看后台会出现Content type 'application/x-www-form-urlencoded;charset=UTF-8' not supported   */
+                dataType: "json",
+                success: function (json) {
+                    console.log(json);
+                    //var json = eval("(" + res + ")");
+                    if (json['status'] == 0) {
+                        layer.open({
+                            content: '保存成功!'
+                            , offset: 'rb'
+                            , icon: 1
+                            , time: 1500
+                            , end: function () {
+                                var _body = window.parent;
+                                var _iframe1 = _body.document.getElementById('mainiframe');
+                                _iframe1.contentWindow.location.reload(true);
+                            }
+                        });
+                    } else {
+                        layer.open({
+                            content: '保存失败!'
+                            , offset: 'rb'
+                            , icon: 0
+                            , time: 2000
+                            , end: function () {
+                                var _body = window.parent;
+                                var _iframe1 = _body.document.getElementById('mainiframe');
+                                _iframe1.contentWindow.location.reload(true);
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                }
+            });
+        }
+    });
+</script>
+</html>
