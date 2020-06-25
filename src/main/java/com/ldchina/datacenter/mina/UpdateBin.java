@@ -1,5 +1,6 @@
 package com.ldchina.datacenter.mina;
 
+import com.ldchina.datacenter.AppConfig;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.springframework.stereotype.Component;
 
@@ -38,8 +39,18 @@ public class UpdateBin {
 
     public String stationId = null;
 
-  //  @PostConstruct
+
+    public void cleanUp() {
+//        try{
+//            this.finalize();
+//        } catch (Throwable throwable) {
+//            throwable.printStackTrace();
+//        }
+    }
+
+    //  @PostConstruct
     public UpdateBin() {
+
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             public void run() {
@@ -50,8 +61,9 @@ public class UpdateBin {
                         resendFrame();
                     } else if (timeOut > 300) {
                         System.out.println("升级超时.");
+                        AppConfig.stationidTostationStatus
+                                .get(stationId).updateBin = null;
                         timer.cancel();
-                        MinaTcpServerHandler.sessionsMap.get(stationId).updateBin=null;
                     }
                 } else {
                     timeOut = 0;
@@ -62,7 +74,7 @@ public class UpdateBin {
     }
 
     public void openUpdate(String stationId, String path) {
-    	this.stationId = stationId;
+        this.stationId = stationId;
         finishJob = false;
         send_pressed = false;
         nCount_FileNumber = 0;
@@ -104,7 +116,8 @@ public class UpdateBin {
     public void resendFrame() {
         try {
             if (!finishJob && send_pressed)
-                MinaTcpServerHandler.sessionsMap.get(stationId).ioSession.write(IoBuffer.wrap(currentSendFrame));
+                AppConfig.stationidTostationStatus
+                        .get(stationId).ioSession.write(IoBuffer.wrap(currentSendFrame));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -126,12 +139,13 @@ public class UpdateBin {
             System.arraycopy(readFileStream, (current_FileNumber - 1) * FRAME_SIZE, btArr, 0, (int) length);
             byte[] sendBuffer = pack(btArr, (byte) (nCount_FileNumber - current_FileNumber), type);
             currentSendFrame = sendBuffer;
-            Sessions sessionUnion = MinaTcpServerHandler.sessionsMap.get(stationId);
             try {
-                sessionUnion.ioSession.write(IoBuffer.wrap(currentSendFrame));
+                AppConfig.stationidTostationStatus
+                        .get(stationId).ioSession.write(IoBuffer.wrap(currentSendFrame));
                 if (current_FileNumber < nCount_FileNumber) {
                     current_FileNumber++;
-                    sessionUnion.webSocket.sendMessage("!" + (current_FileNumber * 100.0 / nCount_FileNumber + "%"));
+                    AppConfig.stationidTostationStatus
+                            .get(stationId).webSocketSession.getBasicRemote().sendText("!" + (current_FileNumber * 100.0 / nCount_FileNumber + "%"));
                 } else {
                     current_FileNumber = 1;
                     send_pressed = false;

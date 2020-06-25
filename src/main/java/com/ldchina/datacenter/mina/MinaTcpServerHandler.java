@@ -4,6 +4,7 @@ package com.ldchina.datacenter.mina;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ldchina.datacenter.AppConfig;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
@@ -18,7 +19,7 @@ public class MinaTcpServerHandler extends IoHandlerAdapter {
 
     private final static Logger log = LoggerFactory.getLogger(MinaTcpServerHandler.class);
     
-    public static Map<String, Sessions> sessionsMap = new HashMap<>();
+  //  public static Map<String, Sessions> sessionsMap = new HashMap<>();
   //  public static Map<IoSession, ReceiveThread> receiveThreadMap = new HashMap<>();
 
     // 由底层决定是否创建一个session
@@ -95,8 +96,11 @@ public class MinaTcpServerHandler extends IoHandlerAdapter {
      */
     @Override
     public void sessionClosed(IoSession session) throws Exception {
-    	clearThreadResource(session);
-        super.sessionClosed(session);
+        if(ProcThread.ioSessionToStationId.get(session) != null){
+            AppConfig.stationidTostationStatus
+                    .get(ProcThread.ioSessionToStationId.get(session))
+                    .ioSession = null;
+        }
     }
 
     /**
@@ -116,19 +120,6 @@ public class MinaTcpServerHandler extends IoHandlerAdapter {
             throws Exception {
         //super.exceptionCaught(session, cause);
         session.close(true);
-    }
-    private void clearThreadResource(IoSession ioSession) {
-//        try {
-//            log.info("clear resource");
-//            String stationId = receiveThreadMap.get(ioSession).stationId;
-//            receiveThreadMap.get(ioSession).exit = true;
-//            if (null == sessionsMap.get(stationId).webSocket) {
-//                sessionsMap.remove(stationId);
-//            }
-//            receiveThreadMap.remove(ioSession);
-//        } catch (Exception e) {
-//            //  e.printStackTrace();
-//        }
     }
 
 }

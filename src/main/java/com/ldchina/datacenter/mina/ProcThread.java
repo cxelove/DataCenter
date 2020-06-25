@@ -30,6 +30,7 @@ public class ProcThread implements Runnable {
 
     private final static Logger log = LoggerFactory.getLogger(ProcThread.class);
 
+    public static Map<IoSession, String> ioSessionToStationId = new HashMap<>();
 
     private IoSession ioSession;
     private Object buff = null;
@@ -105,6 +106,11 @@ public class ProcThread implements Runnable {
         System.arraycopy(bytes, 4, rep, 4, 11);
         rep[15] = 0x7b;
         ioSession.write(IoBuffer.wrap(rep));
+        if(ioSessionToStationId.get(ioSession)!=null){
+            AppConfig.stationidTostationStatus
+                    .get(ioSessionToStationId.get(ioSession))
+                    .stationInfo.commtime=new Date();
+        }
     }
 
     /**
@@ -196,8 +202,7 @@ public class ProcThread implements Runnable {
                     i = i + channelInfo.len + 3;
                 }
                 log.info(logString);
-                AppConfig.stationidTostationStatus.get(dataInfo.stationId).stationInfo.commtime = new Date();
-                AppConfig.stationidTostationStatus.get(dataInfo.stationId).ioSession = ioSession;
+                procStationStatus(dataInfo.stationId,ioSession);
                 procDatabase(dataInfo);
                 break;
             case LufftCommonCmd.Cmd_RequestTime:
@@ -237,9 +242,9 @@ public class ProcThread implements Runnable {
                 log.warn("未知站点号：" + dataInfo.stationId);
                 return;
             }
-            String logString = "站点："+dataInfo.stationId+";";
+            String logString = "站点：" + dataInfo.stationId + ";";
             dataInfo.obTime = TimeUtil.parseDate(ss[2], "yyyyMMddHHmm");
-            logString += "时间："+ ss[2]+";";
+            logString += "时间：" + ss[2] + ";";
             for (int i = 0; i < ss[3].length(); i++) { // 根据报文内传感器类型字段确定有多少种传感器
                 String mainKey = String.valueOf(ss[3].charAt(i));
                 Map<String, ChannelInfo> subKeyToChannel = AppConfig.keyMainSubToChannelInfoByProtocol
@@ -261,7 +266,7 @@ public class ProcThread implements Runnable {
                             } else {
                                 sqlV = ss[posion + 1];
                             }
-                            logString += channelInfo.name +":"+sqlV+";";
+                            logString += channelInfo.name + ":" + sqlV + ";";
                             dataInfo.val.put(sqlK, sqlV);
                             posion += 2;
                         } else {
@@ -272,11 +277,10 @@ public class ProcThread implements Runnable {
             }
             if (ss[posion].equals("PS")) {
                 dataInfo.ps = ss[posion + 1];
-                logString += "电压" +":"+dataInfo.ps+";";
+                logString += "电压" + ":" + dataInfo.ps + ";";
             }
             log.info(logString);
-            AppConfig.stationidTostationStatus.get(dataInfo.stationId).stationInfo.commtime = new Date();
-            AppConfig.stationidTostationStatus.get(dataInfo.stationId).ioSession = ioSession;
+            procStationStatus(dataInfo.stationId,ioSession);
             procDatabase(dataInfo);
         } catch (Exception ex) {
             log.error("LMDS4 DataProc Err:", ex.getStackTrace());
@@ -290,11 +294,15 @@ public class ProcThread implements Runnable {
         return StatusNo.OK;
     }
 
+    void procStationStatus(String stationid, IoSession ioSession){
+        AppConfig.stationidTostationStatus.get(stationid).stationInfo.commtime = new Date();
+        AppConfig.stationidTostationStatus.get(stationid).ioSession = ioSession;
+        ioSessionToStationId.put(ioSession,stationid);
+    }
     /**
-     *
      * @param dataInfo
      */
-    void procDatabase(DataInfo dataInfo){
+    void procDatabase(DataInfo dataInfo) {
         StatusNo sn = insertData(dataInfo);
         System.out.println("插入数据：" + sn);
         if (sn != StatusNo.OK) return;
@@ -313,8 +321,8 @@ public class ProcThread implements Runnable {
     StatusNo insertLatestData(DataInfo dataInfo) {
         AppConfig.stationidTostationStatus.get(dataInfo.stationId).dataInfo = dataInfo;
         AppConfig.stationidTostationStatus.get(dataInfo.stationId).stationInfo.obtime = dataInfo.obTime;
-       // AppConfig.stationidTostationStatus.get(dataInfo.stationId).statusNo = StatusNo.STATION_ONLINE;
-       // AppConfig.stationidTostationStatus.put(dataInfo.stationId, new StationStatus(StatusNo.STATION_ONLINE, dataInfo, stationInfo));
+        // AppConfig.stationidTostationStatus.get(dataInfo.stationId).statusNo = StatusNo.STATION_ONLINE;
+        // AppConfig.stationidTostationStatus.put(dataInfo.stationId, new StationStatus(StatusNo.STATION_ONLINE, dataInfo, stationInfo));
         String sqlString = "MERGE INTO QX_LATEST ( `stationid`, `obtime`,`ps`, `data`) VALUES ( '" + dataInfo.stationId
                 + "', '" + TimeUtil.format(dataInfo.obTime, "yyyy-MM-dd HH:mm:00") + "', '" + dataInfo.ps + "', '"
                 + JSON.toJSONString(dataInfo.val) + "')";
@@ -366,18 +374,10 @@ public class ProcThread implements Runnable {
      * @return
      */
     public int bytesToShort(byte[] bs, int start) {
-//        short s = 0;
-//        s |= bs[start] << 8;
-//        s |= bs[start + 1];
-//        return s;
         return (bs[start] << 8) | (bs[start + 1] & 0xFF);
     }
 
     public int bytesToUShort(byte[] bs, int start) {
-//        int s = 0;
-//        s |= (bs[start] & 0xff) << 8;
-//        s |= (bs[start + 1]) & 0xff;
-//        return s;
         return (bs[start] & 0xFF) << 8 | (bs[start + 1] & 0xFF);
     }
 }

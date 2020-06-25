@@ -60,16 +60,16 @@ public class WebSocket {
         webSocketSet.remove(this);  //从set中删除
         subOnlineCount();           //在线数减1
 
-        if (stationId != null && MinaTcpServerHandler.sessionsMap.get(stationId) != null) {
-            if(MinaTcpServerHandler.sessionsMap.get(stationId).ioSession==null){
-                MinaTcpServerHandler.sessionsMap.remove(stationId);
+        if (stationId != null) {
+            AppConfig.stationidTostationStatus
+                    .get(stationId).webSocketSession = null;
+            if(AppConfig.stationidTostationStatus
+                    .get(stationId).updateBin != null){
+                AppConfig.stationidTostationStatus
+                        .get(stationId).updateBin.cleanUp();
+                AppConfig.stationidTostationStatus
+                        .get(stationId).updateBin=null;
             }
-            MinaTcpServerHandler.sessionsMap.get(stationId).webSocket = null;
-            if(MinaTcpServerHandler.sessionsMap.get(stationId).updateBin!=null) {
-            	MinaTcpServerHandler.sessionsMap.get(stationId).updateBin.stationId=null;
-            	MinaTcpServerHandler.sessionsMap.get(stationId).updateBin=null;
-            }
-            
         }
 
         log.info("OnClosed");
@@ -90,11 +90,11 @@ public class WebSocket {
                     stationId = message.substring(2);
                     try {
                         if (AppConfig.stationidTostationStatus.get(stationId).ioSession != null) {
-                            this.sendMessage("*success");
-                            AppConfig.stationidTostationStatus.get(stationId).webSocket = this;
+                            session.getBasicRemote().sendText("*success");
+                            AppConfig.stationidTostationStatus.get(stationId).webSocketSession = session;
                             //sessionUnion = MinaTcpServerHandler.sessionsMap.get(stationId);
                         } else {
-                            this.sendMessage("*fail");
+                            session.getBasicRemote().sendText("*fail");
                         }
                     } catch (IOException e) {
 
@@ -105,10 +105,10 @@ public class WebSocket {
             }
         } else {
             if (stationId != null) {
-               // if (sessionUnion != null) {
+                if (AppConfig.stationidTostationStatus.get(stationId).ioSession != null) {
                 AppConfig.stationidTostationStatus.get(stationId).ioSession.write(message);
                     log.info("SendToClient: " + stationId + ": " + message);
-               // }
+                }
             }
         }
     }
@@ -126,13 +126,13 @@ public class WebSocket {
         //   error.printStackTrace();
     }
 
-    /**
-     * 这个方法与上面几个方法不一样。没有用注解，是根据自己需要添加的方法。
-     *
-     * @param message
-     * @throws IOException
-     */
-    public void sendMessage(String message) throws IOException {
-        this.session.getBasicRemote().sendText(message);
-    }
+//    /**
+//     * 这个方法与上面几个方法不一样。没有用注解，是根据自己需要添加的方法。
+//     *
+//     * @param message
+//     * @throws IOException
+//     */
+//    public void sendMessage(String message) throws IOException {
+//        this.session.getBasicRemote().sendText(message);
+//    }
 }

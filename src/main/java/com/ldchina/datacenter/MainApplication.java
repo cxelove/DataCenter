@@ -103,7 +103,7 @@ public class MainApplication {
         // 2.设置读取缓存大小
         acceptor.getSessionConfig().setReadBufferSize(2048);
         // 设置响应时常,读写通道均在10秒内无任何操作进如空闲状态
-        acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 200);
+        acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, AppConfig.IOSESSION_TIMEOUT_MIN*60);
         // 3.设置消息处理对象
         acceptor.setHandler(new MinaTcpServerHandler());
         // 设置所使用的的字符编码格式

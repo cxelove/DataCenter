@@ -22,6 +22,7 @@ import java.util.*;
 @DependsOn("DbUtil")
 public class AppConfig {
 
+    public final static int IOSESSION_TIMEOUT_MIN = 5;
 
     /**
      * 测量要素数据库键对测量要素描述类
@@ -84,10 +85,9 @@ public class AppConfig {
             public void run() {
                 long ms = new Date().getTime();
                 for (Map.Entry<String, StationStatus> entry : stationidTostationStatus.entrySet()) {
-                    if (Math.abs((entry.getValue().stationInfo.commtime.getTime() - ms) / 1000 / 60) < 5) {
-
-                    } else {
-                        entry.getValue().ioSession = null;
+                    if (Math.abs((entry.getValue().stationInfo.commtime.getTime() - ms) / 1000 / 60) < IOSESSION_TIMEOUT_MIN) {
+                        if(entry.getValue().ioSession!=null)
+                            entry.getValue().ioSession.close(true);
                     }
                 }
             }
@@ -120,9 +120,6 @@ public class AppConfig {
                             ChannelInfo channelInfo = channelInfoEntry.getValue();
                             channelInfo.key = "_" + entry.getKey() + "_" + channelInfoEntry.getKey();
                             channelInfo._SensorName = s.name;
-//                            if(channelInfo.mapcode != null){
-//                                System.out.println(channelInfo.mapcode);
-//                            }
                             subIdToChannelInfo.put(channelInfoEntry.getKey(), channelInfo);
                         }//结束遍历所有子协议SubId
                         mainchToSubMap.put(entry.getKey(),subIdToChannelInfo);
