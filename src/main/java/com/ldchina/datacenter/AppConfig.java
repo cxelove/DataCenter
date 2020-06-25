@@ -85,9 +85,12 @@ public class AppConfig {
             public void run() {
                 long ms = new Date().getTime();
                 for (Map.Entry<String, StationStatus> entry : stationidTostationStatus.entrySet()) {
-                    if (Math.abs((entry.getValue().stationInfo.commtime.getTime() - ms) / 1000 / 60) < IOSESSION_TIMEOUT_MIN) {
-                        if(entry.getValue().ioSession!=null)
+                    if (Math.abs((entry.getValue().stationInfo.commtime.getTime() - ms) / 1000 / 60) > IOSESSION_TIMEOUT_MIN) {
+                        if(entry.getValue().ioSession!=null){
                             entry.getValue().ioSession.close(true);
+                            System.out.println("Time Out:"+entry.getKey());
+                        }
+
                     }
                 }
             }

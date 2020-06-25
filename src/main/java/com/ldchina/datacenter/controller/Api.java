@@ -1,18 +1,14 @@
 package com.ldchina.datacenter.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.TypeReference;
 import com.ldchina.datacenter.AppConfig;
 import com.ldchina.datacenter.dao.entity.StationInfo;
 import com.ldchina.datacenter.dao.entity.WebConfig;
-import com.ldchina.datacenter.mina.MinaTcpServerHandler;
 import com.ldchina.datacenter.mina.UpdateBin;
 import com.ldchina.datacenter.sensor.ChannelInfo;
 import com.ldchina.datacenter.types.DataInfo;
 import com.ldchina.datacenter.types.Layui;
-import com.ldchina.datacenter.types.Sessions;
 import com.ldchina.datacenter.types.StationStatus;
-import com.ldchina.datacenter.types.StatusNo;
 import com.ldchina.datacenter.utils.DbUtil;
 import com.ldchina.datacenter.utils.TimeUtil;
 
@@ -139,15 +135,20 @@ public class Api {
     @RequestMapping("/startUpdate")
     public Map<String, String> updateBin(String stationId, HttpServletRequest request) {
         Map<String, String> map = new HashMap<>();
-        Sessions sessions = MinaTcpServerHandler.sessionsMap.get(stationId);
-        if (sessions != null) {
-            if (sessions.updateBin != null) {
+       // Sessions sessions = MinaTcpServerHandler.sessionsMap.get(stationId);
+        if (AppConfig.stationidTostationStatus
+                .get(stationId).ioSession != null) {
+            if (AppConfig.stationidTostationStatus
+                    .get(stationId).updateBin != null) {
                 map.put("msg", "站点忙");
             } else {
                 String path = new ApplicationHome(getClass()).getSource().getParentFile().toString() + "\\upload\\bin";
-                sessions.updateBin = new UpdateBin();
-                sessions.updateBin.openUpdate(stationId, path);
-                sessions.updateBin.start();
+                AppConfig.stationidTostationStatus
+                        .get(stationId).updateBin = new UpdateBin();
+                AppConfig.stationidTostationStatus
+                        .get(stationId).updateBin.openUpdate(stationId, path);
+                AppConfig.stationidTostationStatus
+                        .get(stationId).updateBin.start();
                 map.put("msg", "0");
             }
         } else {

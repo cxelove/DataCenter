@@ -89,6 +89,8 @@ public class MainApplication {
         dcfg.setSendBufferSize(1024);// 设置输出缓冲区的大小
         dcfg.setReuseAddress(true);// 设置每一个非主监听连接的端口可以重用
 
+        acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, AppConfig.IOSESSION_TIMEOUT_MIN*60);
+
         acceptor.bind(new InetSocketAddress(serverPort));
         log.info("UDPServer listening on port " + serverPort);
     }

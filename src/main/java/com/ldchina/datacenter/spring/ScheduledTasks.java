@@ -1,8 +1,5 @@
 package com.ldchina.datacenter.spring;
 
-import com.ldchina.datacenter.mina.MinaTcpServerHandler;
-import com.ldchina.datacenter.types.Sessions;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -13,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -37,9 +33,9 @@ public class ScheduledTasks implements SchedulingConfigurer {
     public void setStationTime(){
         log.info("Synchronization time");
         String cmd = "TIME " + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-        for (Map.Entry<String, Sessions> entry : MinaTcpServerHandler.sessionsMap.entrySet()) {
-            entry.getValue().ioSession.write(cmd);
-        }
+//        for (Map.Entry<String, Sessions> entry : MinaTcpServerHandler.sessionsMap.entrySet()) {
+//            entry.getValue().ioSession.write(cmd);
+//        }
     }
     /**
      * 站点线程状态检查

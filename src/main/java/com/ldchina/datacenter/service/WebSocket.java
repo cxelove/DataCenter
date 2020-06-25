@@ -1,8 +1,6 @@
 package com.ldchina.datacenter.service;
 
 import com.ldchina.datacenter.AppConfig;
-import com.ldchina.datacenter.mina.MinaTcpServerHandler;
-import com.ldchina.datacenter.types.Sessions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,10 +118,8 @@ public class WebSocket {
      * @param error
      */
     @OnError
-    public void onError(Session session, Throwable error) {
-        webSocketSet.remove(this);
-        //   System.out.println("发生错误");
-        //   error.printStackTrace();
+    public void onError(Session session, Throwable error) throws IOException {
+        session.close();
     }
 
 //    /**

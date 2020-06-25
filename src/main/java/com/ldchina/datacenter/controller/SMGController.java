@@ -60,7 +60,8 @@ public class SMGController {
         File[] fileList = file.listFiles();
         mav.addObject("stationid", stationId);
         String s="";
-        if(MinaTcpServerHandler.sessionsMap.get(stationId) == null){
+        if(AppConfig.stationidTostationStatus
+                .get(stationId).ioSession == null){
             s=s+"[ 站点不在线 ] ";
             mav.addObject("ready", 0);
         }else{

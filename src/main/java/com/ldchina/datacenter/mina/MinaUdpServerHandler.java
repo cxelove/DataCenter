@@ -5,11 +5,13 @@ import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
 
 public class MinaUdpServerHandler extends IoHandlerAdapter {
-
+    private final static Logger log = LoggerFactory.getLogger(MinaUdpServerHandler.class);
 //    private UdpServer server;
 //
 //    public UdpServerHandler(UdpServer server) {
@@ -36,9 +38,10 @@ public class MinaUdpServerHandler extends IoHandlerAdapter {
            AppConfig.stationidTostationStatus
                    .get(ProcThread.ioSessionToStationId.get(session))
                    .ioSession = null;
+           log.info("Udp Session Closed."+session.getRemoteAddress()+" stationId:"+ProcThread.ioSessionToStationId.get(session));
+       }else{
+           log.info("Udp Session Closed."+session.getRemoteAddress().toString());
        }
-        System.out.println("Session closed...");
-
     }
 
     @Override
@@ -57,8 +60,6 @@ public class MinaUdpServerHandler extends IoHandlerAdapter {
 
     @Override
     public void sessionOpened(IoSession session) throws Exception {
-        System.out.println("Session Opened...");
-        SocketAddress remoteAddress = session.getRemoteAddress();
-        System.out.println(remoteAddress);
+        log.info("Udp Session Opened."+session.getRemoteAddress().toString());
     }
 }

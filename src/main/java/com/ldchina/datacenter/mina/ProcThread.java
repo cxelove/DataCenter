@@ -106,10 +106,10 @@ public class ProcThread implements Runnable {
         System.arraycopy(bytes, 4, rep, 4, 11);
         rep[15] = 0x7b;
         ioSession.write(IoBuffer.wrap(rep));
-        if(ioSessionToStationId.get(ioSession)!=null){
+        if (ioSessionToStationId.get(ioSession) != null) {
             AppConfig.stationidTostationStatus
                     .get(ioSessionToStationId.get(ioSession))
-                    .stationInfo.commtime=new Date();
+                    .stationInfo.commtime = new Date();
         }
     }
 
@@ -202,7 +202,7 @@ public class ProcThread implements Runnable {
                     i = i + channelInfo.len + 3;
                 }
                 log.info(logString);
-                procStationStatus(dataInfo.stationId,ioSession);
+                procStationStatus(dataInfo.stationId, ioSession);
                 procDatabase(dataInfo);
                 break;
             case LufftCommonCmd.Cmd_RequestTime:
@@ -232,6 +232,13 @@ public class ProcThread implements Runnable {
      */
     private void PROC_LMDS4_Data(String s) {
         try {
+            if (ioSessionToStationId.get(ioSession) != null &&
+                    AppConfig.stationidTostationStatus
+                            .get(ioSessionToStationId.get(ioSession)).webSocketSession != null) {
+                AppConfig.stationidTostationStatus
+                        .get(ioSessionToStationId.get(ioSession)).webSocketSession.getBasicRemote().sendText(s);
+            }
+
             DataInfo dataInfo = new DataInfo();
 
             int posion = 4;
@@ -280,10 +287,11 @@ public class ProcThread implements Runnable {
                 logString += "电压" + ":" + dataInfo.ps + ";";
             }
             log.info(logString);
-            procStationStatus(dataInfo.stationId,ioSession);
+            procStationStatus(dataInfo.stationId, ioSession);
             procDatabase(dataInfo);
         } catch (Exception ex) {
-            log.error("LMDS4 DataProc Err:", ex.getStackTrace());
+            log.error("LMDS4 DataProc Err:", ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
@@ -294,11 +302,12 @@ public class ProcThread implements Runnable {
         return StatusNo.OK;
     }
 
-    void procStationStatus(String stationid, IoSession ioSession){
+    void procStationStatus(String stationid, IoSession ioSession) {
         AppConfig.stationidTostationStatus.get(stationid).stationInfo.commtime = new Date();
         AppConfig.stationidTostationStatus.get(stationid).ioSession = ioSession;
-        ioSessionToStationId.put(ioSession,stationid);
+        ioSessionToStationId.put(ioSession, stationid);
     }
+
     /**
      * @param dataInfo
      */
@@ -321,8 +330,6 @@ public class ProcThread implements Runnable {
     StatusNo insertLatestData(DataInfo dataInfo) {
         AppConfig.stationidTostationStatus.get(dataInfo.stationId).dataInfo = dataInfo;
         AppConfig.stationidTostationStatus.get(dataInfo.stationId).stationInfo.obtime = dataInfo.obTime;
-        // AppConfig.stationidTostationStatus.get(dataInfo.stationId).statusNo = StatusNo.STATION_ONLINE;
-        // AppConfig.stationidTostationStatus.put(dataInfo.stationId, new StationStatus(StatusNo.STATION_ONLINE, dataInfo, stationInfo));
         String sqlString = "MERGE INTO QX_LATEST ( `stationid`, `obtime`,`ps`, `data`) VALUES ( '" + dataInfo.stationId
                 + "', '" + TimeUtil.format(dataInfo.obTime, "yyyy-MM-dd HH:mm:00") + "', '" + dataInfo.ps + "', '"
                 + JSON.toJSONString(dataInfo.val) + "')";
@@ -336,7 +343,7 @@ public class ProcThread implements Runnable {
             DbUtil.dbMapperUtil.iSqlMapper.sqlput(sqlString);
             return StatusNo.OK;
         } catch (Exception ex) {
-            log.error("数据库错误【" + dataInfo.stationId + "】：", ex.getStackTrace());
+            log.error("数据库错误【" + dataInfo.stationId + "】：", ex.getStackTrace()[0]);
             return StatusNo.数据库错误;
         }
     }

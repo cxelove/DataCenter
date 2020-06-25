@@ -4,8 +4,6 @@ import com.ldchina.datacenter.AppConfig;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.springframework.stereotype.Component;
 
-import com.ldchina.datacenter.types.Sessions;
-
 import javax.validation.constraints.NotNull;
 
 import java.io.File;
