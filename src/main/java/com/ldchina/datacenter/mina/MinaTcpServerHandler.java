@@ -2,6 +2,8 @@ package com.ldchina.datacenter.mina;
 
 
 import com.ldchina.datacenter.AppConfig;
+import com.ldchina.datacenter.utils.TxtUtil;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
@@ -39,8 +41,11 @@ public class MinaTcpServerHandler extends IoHandlerAdapter {
     @Override
     public void messageReceived(IoSession session, Object message)
             throws Exception {
-
-        ProcThread.procCachedThreadPool.execute(new ProcThread(session, message));
+        IoBuffer ioBuffer = (IoBuffer) message;
+        byte[] bytes = new byte[ioBuffer.limit()];
+        ioBuffer.get(bytes);
+        TxtUtil.getEncoding(bytes);
+        ProcThread.procCachedThreadPool.execute(new ProcThread(session, bytes));
 
 //    	 String msg = message.toString();
 //         log.info("Mina Rec: " + msg);

@@ -12,11 +12,15 @@ import com.ldchina.datacenter.types.Layui;
 import java.util.*;
 
 @Controller
-@RequestMapping("/list")
 public class ListController {
-    @RequestMapping("")
+    @RequestMapping("/list")
     public ModelAndView list() {
         ModelAndView mav = new ModelAndView("list");
+
+        return mav;
+    }
+    @RequestMapping("/api/getListTable")
+    public Map getListTable(){
         Map<String, String> ret = new LinkedHashMap<>();
 
         List<Map.Entry<String, StationStatus>> list = new ArrayList<Map.Entry<String, StationStatus>>(AppConfig.stationidTostationStatus.entrySet());
@@ -29,10 +33,9 @@ public class ListController {
         });
         for (Map.Entry<String, StationStatus> e: list) {
             if(ret.get(e.getValue().stationInfo.measure)==null){
-               ret.put(e.getValue().stationInfo.measure, Layui.getListColsByStationid(e.getValue().stationInfo.stationid));
-           }
+                ret.put(e.getValue().stationInfo.measure, Layui.getListColsByStationid(e.getValue().stationInfo.stationid));
+            }
         }
-        mav.addObject("cols", ret);
-        return mav;
+        return  ret;
     }
 }

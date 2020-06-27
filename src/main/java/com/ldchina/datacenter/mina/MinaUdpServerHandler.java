@@ -1,6 +1,7 @@
 package com.ldchina.datacenter.mina;
 
 import com.ldchina.datacenter.AppConfig;
+import com.ldchina.datacenter.utils.TxtUtil;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
@@ -29,6 +30,7 @@ public class MinaUdpServerHandler extends IoHandlerAdapter {
         IoBuffer ioBuffer = (IoBuffer) message;
         byte[] bytes = new byte[ioBuffer.limit()];
         ioBuffer.get(bytes);
+        TxtUtil.getEncoding(bytes);
         ProcThread.procCachedThreadPool.execute(new ProcThread(session, bytes));
     }
 

@@ -6,7 +6,7 @@ webPort: 5008
 #数据接收端口
 serverPort: 4071
 #数据库端口
-databasePort: 5003
+databasePort: 5004
 #数据库用户名
 databaseUser: root
 #数据库密码

@@ -77,6 +77,13 @@
             <version>1.2.58</version>
         </dependency>
 
+        <!--GetByteEncode-->
+        <dependency>
+            <groupId>com.googlecode.juniversalchardet</groupId>
+            <artifactId>juniversalchardet</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+
     </dependencies>
 
     <build>

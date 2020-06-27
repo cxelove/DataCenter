@@ -11,6 +11,7 @@ import com.ldchina.datacenter.utils.DbUtil;
 import com.ldchina.datacenter.utils.TimeUtil;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
+import org.mozilla.universalchardet.UniversalDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,7 @@ public class ProcThread implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("ThreadName：" + Thread.currentThread().getName() + " RemoteAddr：" + ioSession.getRemoteAddress());
+        System.out.println("ThreadName：" + Thread.currentThread().getName() + " RemoteAddr：" + ioSession.getRemoteAddress().toString());
         switch (buffType) {
             case BUFF_BYTE:
                 byte[] bytes = (byte[]) buff;
