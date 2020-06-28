@@ -70,10 +70,11 @@
 			$('#codeDisp').click(function() {
 				createCode('#codeDisp');
 			});
-			// 登陆事件
-			$('#loginBtn').click(function() {
-				login();
-			});
+		});
+		$(document).keyup(function(event){
+			if(event.keyCode ==13){
+				mysubmit();
+			}
 		});
 		// 生成验证码
 		function createCode(codeID) {
