@@ -1,21 +1,16 @@
 layui.use(['jquery', 'layer', 'table', 'element'], function () {
     var $ = layui.jquery,
         layer = layui.layer;
-        var listtable = localStorage.localStorage.getItem("listtable");
-        if(listtable == undefined){
-
-        }
-           $.ajax({
-               url: "./api/getListTable",
-               type: "post",
-               timeout: 5000,
-               dataType: "json",
-               success: function (data) {
-
-               }
-        })
-
-
+    var listtable = localStorage.getItem("listtable");
+    if (listtable == null) {
+        listtable = $.ajax({url: './api/getListTable', async: false}).responseText;
+        localStorage.setItem("listtable", listtable);
+    }
+    var cols = $.parseJSON(listtable);
+    for (var key in cols) {
+        //添加html标签
+        $('body').append('<table id = "' +key+ '" ></table>');
+    }
     var tables = {};
     for (var key in cols) {
         tables[key] = layui.table;
@@ -28,7 +23,7 @@ layui.use(['jquery', 'layer', 'table', 'element'], function () {
                 var ch = $('[lay-id=' + res['msg'] + '] td[data-field="obtime"]');
                 var to = new Date();
                 for (var i = 0; i < ch.length; i++) {
-                    if(ch[i]=='---'){
+                    if (ch[i] == '---') {
                         $(ch[i]).parent().css('color', 'red');//设置css
                         return;
                     }
@@ -44,8 +39,6 @@ layui.use(['jquery', 'layer', 'table', 'element'], function () {
             , defaultToolbar: []
             , cols: eval("(" + cols[key] + ")")
         });
-
-
     }
 
     window.setInterval(function (args) {

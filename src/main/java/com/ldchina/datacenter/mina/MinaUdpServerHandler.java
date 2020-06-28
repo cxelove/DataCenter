@@ -30,7 +30,7 @@ public class MinaUdpServerHandler extends IoHandlerAdapter {
         IoBuffer ioBuffer = (IoBuffer) message;
         byte[] bytes = new byte[ioBuffer.limit()];
         ioBuffer.get(bytes);
-        TxtUtil.getEncoding(bytes);
+//        TxtUtil.getEncoding(bytes);
         ProcThread.procCachedThreadPool.execute(new ProcThread(session, bytes));
     }
 

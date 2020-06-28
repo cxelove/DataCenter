@@ -108,21 +108,21 @@ public class MainApplication {
         acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, AppConfig.IOSESSION_TIMEOUT_MIN*60);
         // 3.设置消息处理对象
         acceptor.setHandler(new MinaTcpServerHandler());
-//        // 设置所使用的的字符编码格式
-//        acceptor.getFilterChain().addLast(
-//                "gb2312",
-//                new ProtocolCodecFilter(new TextLineCodecFactory(
-//                        Charset.forName("GB2312")
-//                        , LineDelimiter.WINDOWS.getValue()
-//                        , LineDelimiter.WINDOWS.getValue()
-//                )));
-//        acceptor.getFilterChain().addLast(
-//                "utf8",
-//                new ProtocolCodecFilter(new TextLineCodecFactory(
-//                        Charset.forName("UTF8")
-//                        , LineDelimiter.WINDOWS.getValue()
-//                        , LineDelimiter.WINDOWS.getValue()
-//                )));
+        // 设置所使用的的字符编码格式
+        acceptor.getFilterChain().addLast(
+                "gb2312",
+                new ProtocolCodecFilter(new TextLineCodecFactory(
+                        Charset.forName("GB2312")
+                        , LineDelimiter.WINDOWS.getValue()
+                        , LineDelimiter.WINDOWS.getValue()
+                )));
+        acceptor.getFilterChain().addLast(
+                "utf8",
+                new ProtocolCodecFilter(new TextLineCodecFactory(
+                        Charset.forName("UTF8")
+                        , LineDelimiter.WINDOWS.getValue()
+                        , LineDelimiter.WINDOWS.getValue()
+                )));
         // 4.绑定端口
         try {
             // 绑定端口开启服务

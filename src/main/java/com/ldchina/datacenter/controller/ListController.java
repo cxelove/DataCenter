@@ -4,6 +4,7 @@ import com.ldchina.datacenter.dao.entity.StationInfo;
 import com.ldchina.datacenter.types.StationStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.ldchina.datacenter.AppConfig;
@@ -20,6 +21,7 @@ public class ListController {
         return mav;
     }
     @RequestMapping("/api/getListTable")
+    @ResponseBody
     public Map getListTable(){
         Map<String, String> ret = new LinkedHashMap<>();
 

@@ -15,6 +15,7 @@ import org.mozilla.universalchardet.UniversalDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -80,6 +81,16 @@ public class ProcThread implements Runnable {
         下面当作Ascii解析
          */
                 String msg = (String) buff;
+                if (ioSessionToStationId.get(ioSession) != null &&
+                        AppConfig.stationidTostationStatus
+                                .get(ioSessionToStationId.get(ioSession)).webSocketSession != null) {
+                    try {
+                        AppConfig.stationidTostationStatus
+                                .get(ioSessionToStationId.get(ioSession)).webSocketSession.getBasicRemote().sendText(msg);
+                    } catch (IOException ex) {
+                        log.error("Sent To WebSocket Failed:", ex);
+                    }
+                }
                 if ((msg.charAt(0) == '#' && msg.charAt(4) == ',' && msg.charAt(7) == ',')) {
                     PROC_LMDS4_Data(msg);
                 }
@@ -233,12 +244,7 @@ public class ProcThread implements Runnable {
      */
     private void PROC_LMDS4_Data(String s) {
         try {
-            if (ioSessionToStationId.get(ioSession) != null &&
-                    AppConfig.stationidTostationStatus
-                            .get(ioSessionToStationId.get(ioSession)).webSocketSession != null) {
-                AppConfig.stationidTostationStatus
-                        .get(ioSessionToStationId.get(ioSession)).webSocketSession.getBasicRemote().sendText(s);
-            }
+
 
             DataInfo dataInfo = new DataInfo();
 

@@ -41,11 +41,11 @@ public class MinaTcpServerHandler extends IoHandlerAdapter {
     @Override
     public void messageReceived(IoSession session, Object message)
             throws Exception {
-        IoBuffer ioBuffer = (IoBuffer) message;
-        byte[] bytes = new byte[ioBuffer.limit()];
-        ioBuffer.get(bytes);
-        TxtUtil.getEncoding(bytes);
-        ProcThread.procCachedThreadPool.execute(new ProcThread(session, bytes));
+//        IoBuffer ioBuffer = (IoBuffer) message;
+//        byte[] bytes = new byte[ioBuffer.limit()];
+//        ioBuffer.get(bytes);
+//        TxtUtil.getEncoding(bytes);
+        ProcThread.procCachedThreadPool.execute(new ProcThread(session, message.toString()));
 
 //    	 String msg = message.toString();
 //         log.info("Mina Rec: " + msg);
