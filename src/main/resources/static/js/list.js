@@ -9,7 +9,7 @@ layui.use(['jquery', 'layer', 'table', 'element'], function () {
     var cols = $.parseJSON(listtable);
     for (var key in cols) {
         //添加html标签
-        $('body').append('<table id = "' +key+ '" ></table>');
+        $('body').append('<table id = "' +key+ '" lay-filter="'+key+'" ></table>');
     }
     var tables = {};
     for (var key in cols) {
@@ -20,7 +20,7 @@ layui.use(['jquery', 'layer', 'table', 'element'], function () {
             //  , toolbar: '#toolbarDemo'
             //  , height: 'full-20'
             , done: function (res, curr, count) {
-                var ch = $('[lay-id=' + res['msg'] + '] td[data-field="obtime"]');
+                var ch = $('[lay-id=' + res['msg'] + '] td[data-field="OBTIME"]');
                 var to = new Date();
                 for (var i = 0; i < ch.length; i++) {
                     if (ch[i] == '---') {
@@ -38,6 +38,19 @@ layui.use(['jquery', 'layer', 'table', 'element'], function () {
             , cellMinWidth: 90 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
             , defaultToolbar: []
             , cols: eval("(" + cols[key] + ")")
+        });
+        tables[key].on('rowDouble('+key+')', function(obj){
+            console.log(obj);
+            var index=top.layer.open({
+                type: 2,
+                title: '数据查询导出【'+obj.data["STATIONID"]+'】',
+                shadeClose: true,
+                shade: false,
+                maxmin: true, //开启最大化最小化按钮
+                area: ['893px', '600px'],
+                content: 'export?stationid='+obj.data["STATIONID"]+'&date='+obj.data["OBTIME"]
+            });
+            top.layer.full(index);
         });
     }
 

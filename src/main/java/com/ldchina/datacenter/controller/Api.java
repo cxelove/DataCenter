@@ -120,11 +120,11 @@ public class Api {
         if (stationId == null || date == null || limit == null || page == null)
             return Layui.data(null, 0, null);
 
-        if (DbUtil.dbMapperUtil.iSqlMapper.isTableExit("DATA_M_" + stationId)) {
-            String sqlString = "SELECT * FROM DATA_M_" + stationId + " WHERE DATEDIFF(day,obTime,'" + date
+        if (DbUtil.dbMapperUtil.iSqlMapper.isTableExit("DATA_" + stationId)) {
+            String sqlString = "SELECT * FROM DATA_" + stationId + " WHERE DATEDIFF(day,obTime,'" + date
                     + "')=0 ORDER BY obTime DESC LIMIT " + limit * (page - 1) + " , " + limit;
             List<Map<String, Object>> resultList = DbUtil.dbMapperUtil.iSqlMapper.sqlget(sqlString);
-            sqlString = "SELECT COUNT(*) FROM DATA_M_" + stationId + " WHERE DATEDIFF(day,obTime,'" + date + "')=0";
+            sqlString = "SELECT COUNT(*) FROM DATA_" + stationId + " WHERE DATEDIFF(day,obTime,'" + date + "')=0";
             List<Map<String, Object>> countList = DbUtil.dbMapperUtil.iSqlMapper.sqlget(sqlString);
             return Layui.data(null, ((Long) countList.get(0).get("COUNT(*)")).intValue(), resultList);
         } else
@@ -170,9 +170,9 @@ public class Api {
             if (!entry.getValue().stationInfo.measure.equals(measure)) continue;
             Map<String, Object> map = new HashMap<String, Object>();
             DataInfo dataInfo = entry.getValue().dataInfo;
-            map.put("stationid", dataInfo.stationId);
-            map.put("obtime", dataInfo.obTime);
-            map.put("ps", dataInfo.ps);
+            map.put("STATIONID", dataInfo.STATIONID);
+            map.put("OBTIME", dataInfo.OBTIME);
+            map.put("PS", dataInfo.PS);
             for (Map.Entry<String, String> mp : dataInfo.val.entrySet()) {
                 map.put(mp.getKey(), mp.getValue());
             }
@@ -221,11 +221,11 @@ public class Api {
             if (full > 0) {
                 for (Map.Entry<String, StationStatus> entry : AppConfig.stationidTostationStatus.entrySet()) {
                     DataInfo dataInfo = entry.getValue().dataInfo;
-                    if (DbUtil.dbMapperUtil.iSqlMapper.isTableExit("DATA_M_" + dataInfo.stationId)) {
-                        ReportData reportData = new ReportData(dataInfo.stationId,
-                                AppConfig.stationidTostationStatus.get(dataInfo.stationId).stationInfo.getAlias());
+                    if (DbUtil.dbMapperUtil.iSqlMapper.isTableExit("DATA_M_" + dataInfo.STATIONID)) {
+                        ReportData reportData = new ReportData(dataInfo.STATIONID,
+                                AppConfig.stationidTostationStatus.get(dataInfo.STATIONID).stationInfo.getAlias());
 
-                        sqlString = "SELECT COUNT(*) FROM DATA_M_" + dataInfo.stationId
+                        sqlString = "SELECT COUNT(*) FROM DATA_M_" + dataInfo.STATIONID
                                 + " WHERE obtime < DATEADD(dd,1,'" + endTime + "') AND obTime >= '" + startTime + "'";
                         reportData.count = (Long) DbUtil.dbMapperUtil.iSqlMapper.sqlget(sqlString).get(0)
                                 .get("COUNT(*)");

@@ -61,17 +61,17 @@ public class AppConfig {
             stationInfos.forEach(stationInfo -> {
                 StationStatus stationStatus = new StationStatus(null, stationInfo);
                 for (int j = 0; j < list.size(); j++) {
-                    if (stationInfo.getStationid().equals(list.get(j).stationId)) {
+                    if (stationInfo.getSTATIONID().equals(list.get(j).STATIONID)) {
                         stationStatus.dataInfo = list.get(j);
-                        System.out.println("初始化缓存【" + stationStatus.stationInfo.alias + "】更新时间【" + stationStatus.stationInfo.obtime + "】");
+                        System.out.println("初始化缓存【" + stationStatus.stationInfo.alias + "】更新时间【" + stationStatus.stationInfo.OBTIME + "】");
                         list.remove(j);
                         break;
                     }
                 }
                 if(stationStatus.dataInfo==null){
-                    stationStatus.dataInfo = new DataInfo(stationInfo.getStationid());
+                    stationStatus.dataInfo = new DataInfo(stationInfo.getSTATIONID());
                 }
-                stationidTostationStatus.put(stationInfo.getStationid(), stationStatus);
+                stationidTostationStatus.put(stationInfo.getSTATIONID(), stationStatus);
             });
         }
         /**

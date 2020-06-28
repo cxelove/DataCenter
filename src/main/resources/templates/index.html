@@ -35,8 +35,8 @@
                 <li class="layui-nav-item layui-nav-itemed">
                     <a>站点列表</a>
                     <dl class="layui-nav-child" id="stationsList" lay-filter="test" th:each="station:${stations}">
-                        <dd th:attr="data-id=${station.stationid}"
-                            th:text="${station.stationid}+'_'+${station.alias}"></dd>
+                        <dd th:attr="data-id=${station.STATIONID}"
+                            th:text="${station.STATIONID}+'_'+${station.alias}"></dd>
                     </dl>
                 </li>
             </ul>

@@ -7,9 +7,9 @@ import java.util.Map;
 import com.alibaba.fastjson.JSON;
 
 public class DataInfo implements Cloneable {
-    public Date obTime;
-    public String stationId;
-    public String ps;
+    public Date OBTIME;
+    public String STATIONID;
+    public String PS;
     
     public Map<String,String> val = new HashMap<String,String>();
     
@@ -21,8 +21,8 @@ public class DataInfo implements Cloneable {
 
     }
 	public DataInfo(String stationid){
-        this.stationId = stationid;
-        this.obTime = new Date(0);
+        this.STATIONID = stationid;
+        this.OBTIME = new Date(0);
     }
 
     @Override

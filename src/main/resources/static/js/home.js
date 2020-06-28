@@ -66,8 +66,8 @@ function mapMarkClick() {
             var html = "<div style='height:auto;padding:5px;'>  <div class='user-map-info-header' style='font-weight:bold ;'>" + label + "</div>" +
                 "<div class='one-info-content'>" +
                 "<hr/><table>" +
-                "<tr><td class='tbtdl'>时间</td><td>：" + (new Date(data['data']['obTime'])).Format("yyyy-MM-dd hh:mm") + "</td></tr>" +
-                "<tr><td class='tbtdl'>电压</td><td>：" + data['data']['ps'] + " V</td></tr>";
+                "<tr><td class='tbtdl'>时间</td><td>：" + (new Date(data['data']['OBTIME'])).Format("yyyy-MM-dd hh:mm") + "</td></tr>" +
+                "<tr><td class='tbtdl'>电压</td><td>：" + data['data']['PS'] + " V</td></tr>";
             data['title'] = JSON.parse(data['title']);
             for (var i in data['title']) {
                 html += "<tr><td class='tbtdl'>" + data['title'][i].name + "</td><td>：" + data['data']['val'][data['title'][i].key] + " " + data['title'][i].unit + "</td></tr>";
@@ -117,7 +117,7 @@ $.ajax({
         $.each(data, function (i, val) {
             var point = new BMap.Point(val["lng"], val["lat"]);
             var marker = new BMap.Marker(point, {icon: myIcon});
-            var lab = new BMap.Label(val["stationid"] + "_" + val["alias"], {
+            var lab = new BMap.Label(val["STATIONID"] + "_" + val["alias"], {
                 offset: new BMap.Size(20, 0)
             });
             // 设置label(标注的样式)

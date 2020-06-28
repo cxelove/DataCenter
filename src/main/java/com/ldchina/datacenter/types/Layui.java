@@ -37,13 +37,12 @@ public class Layui extends HashMap<String, Object> {
     public static void initListCols() {
 
         String tmpcols = "[[" +
-                "{field: 'stationid', title: '站点', width: 64}" +
-                ",{field: 'obtime', width: 150, title: '时间',templet: function(d){if( d['obtime']== 0) return '---'; return (new Date(d['obtime'])).Format('yyyy-MM-dd hh:mm');  }}" +
+                "{field: 'STATIONID', title: '站点', width: 64}" +
+                ",{field: 'OBTIME', width: 150, title: '时间',templet: function(d){if( d['OBTIME']== 0) return '---'; return (new Date(d['OBTIME'])).Format('yyyy-MM-dd hh:mm');  }}" +
                 ",";
 
         for(Map.Entry<String,Map<String, WebConfig>> stationidToWebConfig:AppConfig.keyToWebconfigByStationid.entrySet()){
             if(stationidToListcols.get(stationidToWebConfig.getKey()) == null){
-
                     String colString = tmpcols;
                     for (Map.Entry<String, WebConfig> webConfigEntry : stationidToWebConfig.getValue().entrySet()) {
                         String mainKey = webConfigEntry.getKey().split("_")[1];
@@ -54,9 +53,9 @@ public class Layui extends HashMap<String, Object> {
                                     .get(mainKey)
                                     .get(subKey);
                             if (channelInfo.unit == null || channelInfo.unit.equals("")) {
-                                colString += "{ field:'" + channelInfo.key + "',title:'" + channelInfo.name + "'},";
+                                colString += "{ field:'" + channelInfo.key.toUpperCase() + "',title:'" + channelInfo.name + "'},";
                             } else {
-                                colString += "{ field:'" + channelInfo.key + "',title:'" + channelInfo.name + "(" + channelInfo.unit + ")'},";
+                                colString += "{ field:'" + channelInfo.key.toUpperCase() + "',title:'" + channelInfo.name + "(" + channelInfo.unit + ")'},";
                             }
                         }catch (NullPointerException ex){
                             System.out.println("初始化列表出错mainKey:"+mainKey+"subKey:"+subKey);
@@ -64,7 +63,7 @@ public class Layui extends HashMap<String, Object> {
                             return;
                         }
                     }
-                    colString += "{field: 'ps', title: '电压(V)'}]]";
+                    colString += "{field: 'PS', title: '电压(V)'}]]";
                     stationidToListcols.put(stationidToWebConfig.getKey(), colString);
 
             }

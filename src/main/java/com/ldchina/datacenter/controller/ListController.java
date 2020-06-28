@@ -1,6 +1,5 @@
 package com.ldchina.datacenter.controller;
 
-import com.ldchina.datacenter.dao.entity.StationInfo;
 import com.ldchina.datacenter.types.StationStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +34,7 @@ public class ListController {
         });
         for (Map.Entry<String, StationStatus> e: list) {
             if(ret.get(e.getValue().stationInfo.measure)==null){
-                ret.put(e.getValue().stationInfo.measure, Layui.getListColsByStationid(e.getValue().stationInfo.stationid));
+                ret.put(e.getValue().stationInfo.measure, Layui.getListColsByStationid(e.getValue().stationInfo.STATIONID));
             }
         }
         return  ret;

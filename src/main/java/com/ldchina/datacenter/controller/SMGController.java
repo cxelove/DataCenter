@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.ldchina.datacenter.AppConfig;
 import com.ldchina.datacenter.dao.entity.StationInfo;
 
-import com.ldchina.datacenter.mina.MinaTcpServerHandler;
 import com.ldchina.datacenter.utils.DbUtil;
 
 import org.springframework.boot.system.ApplicationHome;
@@ -126,7 +125,7 @@ public class SMGController {
             JSONObject jsonObject = JSONObject.parseObject(jb.toString());
             StationInfo stationInfo = JSON.toJavaObject(jsonObject, StationInfo.class);
             DbUtil.dbMapperUtil.qxStationMapper.updateStationInfoById(stationInfo);
-        AppConfig.stationidTostationStatus.get(stationInfo.stationid).stationInfo= stationInfo;
+        AppConfig.stationidTostationStatus.get(stationInfo.STATIONID).stationInfo= stationInfo;
             return "success";
      //   } catch (Exception ex) { /*report an error*/ }
 

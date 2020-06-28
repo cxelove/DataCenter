@@ -8,7 +8,6 @@ import com.ldchina.datacenter.sensor.ChannelInfo;
 import com.ldchina.datacenter.types.DataInfo;
 import com.ldchina.datacenter.types.Layui;
 import com.ldchina.datacenter.types.StationStatus;
-import com.ldchina.datacenter.types.StatusNo;
 import com.ldchina.datacenter.utils.DbUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -145,7 +144,7 @@ public class CreateStationController {
             DbUtil.dbMapperUtil.iSqlMapper.sqlput(sqlConfigTableString);
             DbUtil.dbMapperUtil.iSqlMapper.sqlput("commit");
             StationInfo qxStation = new StationInfo();
-            qxStation.stationid = stationid;
+            qxStation.STATIONID = stationid;
             qxStation.protocol = protocol;
             qxStation.measure = measure;
             qxStation.alias = stationname;

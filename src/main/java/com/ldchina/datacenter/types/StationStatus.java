@@ -15,7 +15,6 @@ public class StationStatus{
 	public UpdateBin updateBin;
 
 	public StationStatus( DataInfo dataInfo) {
-
 		this.dataInfo = dataInfo;
 	}
 	public StationStatus( DataInfo dataInfo, StationInfo stationInfo) {
