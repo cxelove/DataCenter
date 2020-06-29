@@ -17,8 +17,6 @@ layui.use(['jquery', 'layer', 'table', 'element'], function () {
         tables[key].render({
             elem: '#' + key
             , url: './api/getAllLatest?measure=' + key
-            //  , toolbar: '#toolbarDemo'
-            //  , height: 'full-20'
             , done: function (res, curr, count) {
                 var ch = $('[lay-id=' + res['msg'] + '] td[data-field="OBTIME"]');
                 var to = new Date();
@@ -40,20 +38,16 @@ layui.use(['jquery', 'layer', 'table', 'element'], function () {
             , cols: eval("(" + cols[key] + ")")
         });
         tables[key].on('rowDouble('+key+')', function(obj){
-            console.log(obj);
             var index=top.layer.open({
                 type: 2,
                 title: '数据查询导出【'+obj.data["STATIONID"]+'】',
                 shadeClose: true,
                 shade: false,
-                maxmin: true, //开启最大化最小化按钮
-                area: ['893px', '600px'],
-                content: 'export?stationid='+obj.data["STATIONID"]+'&date='+obj.data["OBTIME"]
+                area: [window.top.innerWidth+"px",window.top.innerHeight+"px"],
+                content:['export?stationid='+obj.data["STATIONID"]+'&date='+obj.data["OBTIME"],'no']
             });
-            top.layer.full(index);
         });
     }
-
     window.setInterval(function (args) {
         for (var key in cols) {
             tables[key].reload(key, {url: './api/getAllLatest?measure=' + key});

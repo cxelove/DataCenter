@@ -50,7 +50,7 @@ public class ProcThread implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("ThreadName：" + Thread.currentThread().getName() + " RemoteAddr：" + ioSession.getRemoteAddress().toString());
+     //   System.out.println("ThreadName：" + Thread.currentThread().getName() + " RemoteAddr：" + ioSession.getRemoteAddress().toString());
         switch (buffType) {
             case BUFF_BYTE:
                 byte[] bytes = (byte[]) buff;
@@ -242,7 +242,6 @@ public class ProcThread implements Runnable {
      */
     private void PROC_LMDS4_Data(String s) {
         try {
-
 
             DataInfo dataInfo = new DataInfo();
 

@@ -34,6 +34,8 @@ public class ExportController {
         mav.addObject("cols", Layui.getListColsByStationid(stationid));
         mav.addObject("stationid", stationid);
         mav.addObject("date", TimeUtil.format(new Date(Long.parseLong(date)), "yyyy-MM-dd"));
+        mav.addObject("alias",AppConfig.stationidTostationStatus.get(stationid).stationInfo.alias);
+
         // mav.addObject("cols", com.ldchina.datacenter.types.Layui.getListCols(AppConfig.webconfigs));
         return mav;
     }
@@ -81,9 +83,13 @@ public class ExportController {
                 sheet.getRow(0).createCell(0).setCellValue("观测时间");
                 sheet.getRow(0).createCell(1).setCellValue("电压(V)");
                 for (int n = 0; n < resultList.size(); n++) {
-                    sheet.getRow(n + 1).createCell(0).setCellValue(TimeUtil.format((Date) resultList.get(n).get("OBTIME"), "yyyy-MM-dd hh:mm"));
+                    sheet.getRow(n + 1).createCell(0).setCellValue(TimeUtil.format((Date) resultList.get(n).get("OBTIME"), "yyyy-MM-dd HH:mm"));
                     sheet.autoSizeColumn((short) 0);
-                    sheet.getRow(n + 1).createCell(1).setCellValue(Float.parseFloat((String) resultList.get(n).get("PS")));
+                    try{
+                        sheet.getRow(n + 1).createCell(1).setCellValue(Double.parseDouble((String) resultList.get(n).get("PS")));
+                    }catch (Exception ex){
+                        sheet.getRow(n + 1).createCell(1).setCellValue((String) resultList.get(n).get("PS"));
+                    }
                     sheet.autoSizeColumn((short) 1);
                 }
                 int cell = 2;
