@@ -31,7 +31,7 @@ public class ProcThread implements Runnable {
     private final static Logger log = LoggerFactory.getLogger(ProcThread.class);
 
     public static Map<IoSession, String> ioSessionToStationId = new HashMap<>();
-
+    String stationId = null;
     private IoSession ioSession;
     private Object buff = null;
     private BUFF_TYPE buffType = null;
@@ -50,7 +50,8 @@ public class ProcThread implements Runnable {
 
     @Override
     public void run() {
-     //   System.out.println("ThreadName：" + Thread.currentThread().getName() + " RemoteAddr：" + ioSession.getRemoteAddress().toString());
+        stationId = ioSessionToStationId.get(ioSession);
+        //   System.out.println("ThreadName：" + Thread.currentThread().getName() + " RemoteAddr：" + ioSession.getRemoteAddress().toString());
         switch (buffType) {
             case BUFF_BYTE:
                 byte[] bytes = (byte[]) buff;
@@ -89,16 +90,22 @@ public class ProcThread implements Runnable {
                         log.error("Sent To WebSocket Failed:", ex);
                     }
                 }
-                if ((msg.charAt(0) == '#' && msg.charAt(4) == ',' && msg.charAt(7) == ',')) {
-                    PROC_LMDS4_Data(msg);
-                }
                 if (msg.contains("<F>") || msg.contains("<N>") || msg.contains("/////")) {
-
+                    DbUtil.dbMapperUtil.qxReuploadMapper.delete(stationId, AppConfig.stationidTostationStatus.get(stationId)._Runtime_LastReuploadTime);
+                    doReupload(stationId);
+                    return;
                 }
+                if(msg.length()>8){
+                    if ((msg.charAt(0) == '#' && msg.charAt(4) == ',' && msg.charAt(7) == ',')) {
+                        PROC_LMDS4_Data(msg);
+                        doReupload(stationId);
+                        return;
+                    }
+                }
+
+
                 break;
         }
-
-
     }
 
     /**
@@ -138,14 +145,15 @@ public class ProcThread implements Runnable {
             return;
         }
         System.out.println("命令：" + lufftCommonCmd.cmd);
-        System.out.println("数据长度：" + lufftCommonCmd.datalen);
+//        System.out.println("数据长度：" + lufftCommonCmd.datalen);
         System.out.println("源地址：" + lufftCommonCmd.srcId);
-        System.out.println("目的地址：" + lufftCommonCmd.distId);
-        System.out.println("数据信息通道数：" + lufftCommonCmd.channelNum);
+//        System.out.println("目的地址：" + lufftCommonCmd.distId);
+//        System.out.println("数据信息通道数：" + lufftCommonCmd.channelNum);
 
         DataInfo dataInfo = new DataInfo();
         String val = "", key = "";
         dataInfo.STATIONID = String.valueOf(lufftCommonCmd.srcId);
+        stationId = dataInfo.STATIONID;
         if (StatusNo.OK != checkStationId(dataInfo.STATIONID)) {
             System.out.println("未知站点号：" + dataInfo.STATIONID);
             return;
@@ -213,7 +221,10 @@ public class ProcThread implements Runnable {
                 }
                 log.info(logString);
                 procStationStatus(dataInfo.STATIONID, ioSession);
-                procDatabase(dataInfo);
+                insertData(dataInfo);
+                if (AppConfig.stationidTostationStatus.get(dataInfo.STATIONID).dataInfo.OBTIME.before(dataInfo.OBTIME)) {
+                    insertLatestData(dataInfo);
+                }
                 break;
             case LufftCommonCmd.Cmd_RequestTime:
                 break;
@@ -242,13 +253,11 @@ public class ProcThread implements Runnable {
      */
     private void PROC_LMDS4_Data(String s) {
         try {
-
             DataInfo dataInfo = new DataInfo();
-
             int posion = 4;
             String[] ss = s.split(",");
             dataInfo.STATIONID = ss[0].substring(1);
-
+            stationId = dataInfo.STATIONID;
             if (StatusNo.OK != checkStationId(dataInfo.STATIONID)) {
                 log.warn("未知站点号：" + dataInfo.STATIONID);
                 return;
@@ -292,10 +301,53 @@ public class ProcThread implements Runnable {
             }
             log.info(logString);
             procStationStatus(dataInfo.STATIONID, ioSession);
-            procDatabase(dataInfo);
+            insertData(dataInfo);
+            long dateOld = AppConfig.stationidTostationStatus.get(dataInfo.STATIONID).stationInfo.OBTIME.getTime();
+            long diff = (dataInfo.OBTIME.getTime() - dateOld) / 1000 / 60;
+            if (diff < 0) {
+                // 说明这条报文是补包的报文，需删除补包表即可，无须更新站点信息
+                DbUtil.dbMapperUtil.qxReuploadMapper.delete(dataInfo.STATIONID, dataInfo.OBTIME);
+            } else {
+                /*数据和缓存比如果数据是新的则更新缓存，插入最新数据表*/
+                System.out.println("更新缓存：" + insertLatestData(dataInfo));
+                if (diff > 1) {
+                    // 说明中间有断报
+                    double insCount = (diff > 1440 * 31) ? (1440 * 31) : diff;// 最多补31天历史记录
+                    Calendar obtime = Calendar.getInstance();// 用于插入时自增时间
+                    obtime.setTime(new Date(dateOld));
+                    for (int i = 1; i < insCount; i++) {
+                        obtime.add(Calendar.MINUTE, 1);
+                        DbUtil.dbMapperUtil.qxReuploadMapper.save(dataInfo.STATIONID, obtime.getTime());
+                    }
+                }
+            }
+
+
         } catch (Exception ex) {
             log.error("LMDS4 DataProc Err:", ex.getMessage());
             ex.printStackTrace();
+        }
+    }
+
+    private void doReupload(String stationId) {
+        if (stationId == null) return;
+        Date reuploadDateTime = DbUtil.dbMapperUtil.qxReuploadMapper.getReupload(stationId);
+        if (reuploadDateTime != null) {
+            if (AppConfig.stationidTostationStatus.get(stationId)._Runtime_LastReuploadTime.equals(reuploadDateTime)) {
+                AppConfig.stationidTostationStatus.get(stationId)._Runtime_ReuploadTryTimes++;
+            } else {
+                AppConfig.stationidTostationStatus.get(stationId)._Runtime_ReuploadTryTimes = 1;
+            }
+            if (AppConfig.stationidTostationStatus.get(stationId)._Runtime_ReuploadTryTimes > 2) {
+                DbUtil.dbMapperUtil.qxReuploadMapper.delete(stationId, AppConfig.stationidTostationStatus.get(stationId)._Runtime_LastReuploadTime);
+                AppConfig.stationidTostationStatus.get(stationId)._Runtime_ReuploadTryTimes = 0;
+            } else {
+                // LocalDateTime.
+                AppConfig.stationidTostationStatus.get(stationId)._Runtime_LastReuploadTime = new Date(reuploadDateTime.getTime());
+                String cmd = "DOWN " + TimeUtil.format(AppConfig.stationidTostationStatus.get(stationId)._Runtime_LastReuploadTime, "yyyyMMddHHmm") + " 1";
+                log.info("Send Cmd To [" + stationId + "]: " + cmd);
+                AppConfig.stationidTostationStatus.get(stationId).ioSession.write(cmd);
+            }
         }
     }
 
@@ -315,15 +367,15 @@ public class ProcThread implements Runnable {
     /**
      * @param dataInfo
      */
-    void procDatabase(DataInfo dataInfo) {
-        StatusNo sn = insertData(dataInfo);
-        System.out.println("插入数据：" + sn);
-        if (sn != StatusNo.OK) return;
-        /*数据和缓存比如果数据是新的则更新缓存，插入最新数据表*/
-        if (AppConfig.stationidTostationStatus.get(dataInfo.STATIONID).dataInfo.OBTIME.before(dataInfo.OBTIME)) {
-            System.out.println("更新缓存：" + insertLatestData(dataInfo));
-        }
-    }
+//    void procDatabase(DataInfo dataInfo) {
+//        StatusNo sn = insertData(dataInfo);
+//        System.out.println("插入数据：" + sn);
+//        if (sn != StatusNo.OK) return;
+//        /*数据和缓存比如果数据是新的则更新缓存，插入最新数据表*/
+//        if (AppConfig.stationidTostationStatus.get(dataInfo.STATIONID).dataInfo.OBTIME.before(dataInfo.OBTIME)) {
+//            System.out.println("更新缓存：" + insertLatestData(dataInfo));
+//        }
+//    }
 
     /**
      * 插入数据库latest表，处理最新数据缓存

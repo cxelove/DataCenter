@@ -1,5 +1,7 @@
 package com.ldchina.datacenter.spring;
 
+import com.ldchina.datacenter.AppConfig;
+import com.ldchina.datacenter.types.StationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -21,7 +24,7 @@ public class ScheduledTasks implements SchedulingConfigurer {
     public void configureTasks(ScheduledTaskRegistrar scheduledTaskRegistrar) {
         scheduledTaskRegistrar.setScheduler(setTaskExecutors());
     }
-    @Bean
+ //   @Bean
     public Executor setTaskExecutors(){
         return Executors.newScheduledThreadPool(2); // 5个线程来处理。
     }
@@ -32,23 +35,20 @@ public class ScheduledTasks implements SchedulingConfigurer {
     @Scheduled(cron = "30 0 12 * * ?")//每天12:00:30秒执行一次
     public void setStationTime(){
         log.info("Synchronization time");
-        String cmd = "TIME " + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-//        for (Map.Entry<String, Sessions> entry : MinaTcpServerHandler.sessionsMap.entrySet()) {
-//            entry.getValue().ioSession.write(cmd);
-//        }
+        String cmd = "TIME " + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())+"\r\n";
+        for (Map.Entry<String, StationStatus> entry : AppConfig.stationidTostationStatus.entrySet()) {
+            if(entry.getValue().stationInfo.protocol.equals("LMD-S4")){
+                if(entry.getValue().ioSession!=null){
+                    entry.getValue().ioSession.write(cmd);
+                }
+            }
+        }
     }
     /**
      * 站点线程状态检查
      */
-    @Scheduled(fixedRate = 3* 60*1000)//每30秒执行一次
+    @Scheduled(fixedRate = 3* 60*1000)
     public void stationThreadCheck(){
-//        for(ReceiveThread trd : receiveThreadMap.values()){
-//            if(trd.isAlive()){
-//                log.info("["+trd.stationId+"]"+"线程正常.");
-//            }else{
-//                log.error("["+trd.stationId+"]"+"线程异常退出,现重新启动.");
-//                trd.start();
-//            }
-//        }
+
     }
 }
