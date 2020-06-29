@@ -84,7 +84,7 @@
                 data: JSON.stringify(data.field),
                 success: function (data) {
                     layer.close(loading);
-                    layer.open({
+                    top.layer.open({
                         content: '创建成功!'
                         , offset: 'rb'
                         , icon: 1
@@ -98,7 +98,7 @@
                 },
                 fail: function () {
                     layer.close(loading);
-                    layer.open({
+                    top.layer.open({
                         content: '创建失败!'
                         , offset: 'rb'
                         , icon: 1

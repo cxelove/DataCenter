@@ -1,15 +1,14 @@
-
-layui.use(['table','layer', 'element'], function () {
+layui.use(['table', 'layer', 'element'], function () {
 
     var table = layui.table,
         layer = layui.layer;
 
     var mylayer;
-    table =  $.extend(table, {config: {checkName: 'noRealTime'}});
+    table = $.extend(table, {config: {checkName: 'noRealTime'}});
     table.render({
         elem: '#datatable'
-       // , toolbar: '#toolbarDemo'
-      //  , defaultToolbar: ['']
+        // , toolbar: '#toolbarDemo'
+        //  , defaultToolbar: ['']
         , url: './api/getStations'
         , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
         , cols: [[
@@ -22,13 +21,13 @@ layui.use(['table','layer', 'element'], function () {
                 }
             }
             , {field: 'protocol', width: 140, title: '协议'}
-            , {field: 'lng', width: 100, title: '经度',edit:'text'}
-            , {field: 'lat', width: 100, title: '纬度',edit:'text'}
+            , {field: 'lng', width: 100, title: '经度', edit: 'text'}
+            , {field: 'lat', width: 100, title: '纬度', edit: 'text'}
             // , {field: 'noRealTime', width: 40, title: '实时?',type:'checkbox'}
             , {fixed: 'right', width: 240, title: "操作", align: 'center', toolbar: '#tablebtn', unresize: true}
         ]]
-        , done:function(res, page, count){
-        	console.log(res);
+        , done: function (res, page, count) {
+            console.log(res);
         }
     });
 
@@ -54,13 +53,13 @@ layui.use(['table','layer', 'element'], function () {
      * @param data
      */
     function delstation(data) {
-        top.layer.confirm('数据删除后无法恢复，确认删除？', {icon: 3, title: '警告'}, function (index) {
+       var index= top.layer.confirm('数据删除后无法恢复，确认删除？', {icon: 3, title: '警告'}, function (index) {
             $.ajax({
                 url: "/smg/del?stationId=" + data["stationid"],
                 type: "get",
                 timeout: 5000,
                 success: function () {
-                    table.reload("datatable",{})
+                    table.reload("datatable", {})
                 }
             })
             top.layer.close(index);
@@ -77,16 +76,27 @@ layui.use(['table','layer', 'element'], function () {
         $.post("../smg/updateStationInfo", JSON.stringify(data), function (result) {
         });
     });
-  //以复选框事件为例
-    table.on('checkbox(list)', function(obj){
-      console.log(obj)
-      obj.data.noRealTime = obj.checked;
-      var value = obj.value //得到修改后的值
-	      , data = obj.data //得到所在行所有键值
-	      , field = obj.field; //得到字段
-      $.post("../smg/updateStationInfo", JSON.stringify(data), function (result) {
-  });
+    table.on('rowDouble(list)', function(obj){
+        console.log(obj);
+        // var index=top.layer.open({
+        //     type: 2,
+        //     title: '数据查询导出【'+obj.data["STATIONID"]+'】',
+        //     shadeClose: true,
+        //     shade: false,
+        //     area: [window.top.innerWidth+"px",window.top.innerHeight+"px"],
+        //     content:['export?stationid='+obj.data["STATIONID"]+'&date='+obj.data["OBTIME"],'no']
+        // });
     });
+    //以复选框事件为例
+    // table.on('checkbox(list)', function (obj) {
+    //     console.log(obj)
+    //     obj.data.noRealTime = obj.checked;
+    //     var value = obj.value //得到修改后的值
+    //         , data = obj.data //得到所在行所有键值
+    //         , field = obj.field; //得到字段
+    //     $.post("../smg/updateStationInfo", JSON.stringify(data), function (result) {
+    //     });
+    // });
     /**
      * 监听按钮工具栏
      */
