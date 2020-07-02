@@ -5,8 +5,49 @@
     <title>Title</title>
     <link rel="stylesheet" href="/static/js/mylayui/css/layui.css">
 </head>
+<style>
+    .layui-body{
+        left:0px;
+        margin: 20px;
+    }
+</style>
 <script src="/static/js/mylayui/layui.js"></script>
 <body class="layui-body layui-bg-gray" id="layui-body">
+<div class="layui-row layui-col-space12">
+    <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">卡片面板</div>
+            <div class="layui-card-body" th:text="${stationInfo.stationid}">
+
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">卡片面板</div>
+            <div class="layui-card-body" th:text="${stationInfo.stationid}">
+
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">卡片面板</div>
+            <div class="layui-card-body" th:text="${stationInfo.stationid}">
+
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">卡片面板</div>
+            <div class="layui-card-body" th:text="${stationInfo.stationid}">
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="layui-row layui-col-space15">
     <div class="layui-col-md6">
         <div class="layui-card">
@@ -33,7 +74,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 </body>
 </html>

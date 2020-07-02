@@ -94,19 +94,19 @@ public class Api {
         Set valKeySet = json.keySet();
         String sql = "";
         Map<String, WebConfig> retMap = new HashMap<>();
-        try{
+        try {
             for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.keyToWebconfigByStationid.get(stationId).entrySet()) {
                 if (valKeySet.contains(webConfigEntry.getKey())) {
                     AppConfig.keyToWebconfigByStationid.get(stationId).get(webConfigEntry.getKey()).mapDisplay = true;
-                    sql = "UPDATE `web_config` SET `mapdisplay` = true WHERE `key`='"+webConfigEntry.getKey()+"' AND `stationid` = '" + stationId+"'";
+                    sql = "UPDATE `web_config` SET `mapdisplay` = true WHERE `key`='" + webConfigEntry.getKey() + "' AND `stationid` = '" + stationId + "'";
                 } else {
                     AppConfig.keyToWebconfigByStationid.get(stationId).get(webConfigEntry.getKey()).mapDisplay = false;
-                    sql = "UPDATE `web_config` SET `mapdisplay` = false WHERE `key`='"+webConfigEntry.getKey()+"' AND `stationid` = '" + stationId+"'";
+                    sql = "UPDATE `web_config` SET `mapdisplay` = false WHERE `key`='" + webConfigEntry.getKey() + "' AND `stationid` = '" + stationId + "'";
                 }
                 DbUtil.dbMapperUtil.iSqlMapper.sqlput(sql);
             }
             return 0;
-        }catch (Exception ex){
+        } catch (Exception ex) {
             ex.printStackTrace();
             return 1;
         }
@@ -223,27 +223,38 @@ public class Api {
             return Layui.data(null, 0, null);
 
         List<ReportData> reportDataList = new ArrayList<>();
-        int full = 1;
-        Date now = new Date();
-
+        long full = 1;
+        Date nowDate = new Date();
         try {
             Date fromDate = TimeUtil.parseDate(startTime + " 00:00", "yyyy-MM-dd HH:mm");
             Date toDate = TimeUtil.parseDate(endTime + " 00:00", "yyyy-MM-dd HH:mm");
-            if (toDate.before(fromDate)) {
-                full = (int) (toDate.getTime() / 1000 / 60 - fromDate.getTime() / 1000 / 60) + 24 * 60;
-            } else {
-                full = (int) (now.getTime() / 1000 / 60 - fromDate.getTime() / 1000 / 60);
+
+            if((nowDate.getTime()-toDate.getTime())/1000 > 24 *3600) {
+                if (fromDate.before(toDate)) {
+                    full = (long) (toDate.getTime() - fromDate.getTime()) / 1000 / 60 + 24 * 60;
+                } else {
+                    full = 1440;
+                }
+            }else {
+                full = (long) (nowDate.getTime() - fromDate.getTime()) / 1000 / 60;
             }
-            String sqlString = "";
-            // full /=60;
+
             if (full > 0) {
-                for (Map.Entry<String, StationStatus> entry : AppConfig.stationidTostationStatus.entrySet()) {
-                    DataInfo dataInfo = entry.getValue().dataInfo;
-                    if (DbUtil.dbMapperUtil.iSqlMapper.isTableExit("DATA_M_" + dataInfo.stationid)) {
+                List<String> list = new ArrayList<>();
+                List<Map.Entry<String, StationStatus>> mapList = new ArrayList<Map.Entry<String, StationStatus>>(AppConfig.stationidTostationStatus.entrySet());
+                Collections.sort(mapList, new Comparator<Map.Entry<String, StationStatus>>() {
+                    public int compare(Map.Entry<String, StationStatus> status1, Map.Entry<String, StationStatus> status2) {
+                        //降序排列
+                        return status1.getValue().stationInfo.protocol.compareTo(status2.getValue().stationInfo.protocol);
+                    }
+                });
+                for(int i=0;i<mapList.size();i++){
+                    DataInfo dataInfo = mapList.get(i).getValue().dataInfo;
+                    if (DbUtil.dbMapperUtil.iSqlMapper.isTableExit("DATA_" + dataInfo.stationid)) {
                         ReportData reportData = new ReportData(dataInfo.stationid,
                                 AppConfig.stationidTostationStatus.get(dataInfo.stationid).stationInfo.getAlias());
 
-                        sqlString = "SELECT COUNT(*) FROM DATA_M_" + dataInfo.stationid
+                        String sqlString = "SELECT COUNT(*) FROM DATA_" + dataInfo.stationid
                                 + " WHERE obtime < DATEADD(dd,1,'" + endTime + "') AND obTime >= '" + startTime + "'";
                         reportData.count = (Long) DbUtil.dbMapperUtil.iSqlMapper.sqlget(sqlString).get(0)
                                 .get("COUNT(*)");
@@ -251,15 +262,17 @@ public class Api {
                                 + "%";
                         reportDataList.add(reportData);
                     }
-
                 }
-                return Layui.data(null, reportDataList.size(), reportDataList);
-            } else {
-                return Layui.data(null, 0, null);
-            }
-        } catch (Exception e) {
-            log.error("解析:", e);
+            return Layui.data(null, reportDataList.size(), reportDataList);
+        } else{
+            return Layui.data(null, 0, null);
         }
-        return Layui.data(null, 0, null);
+    } catch(
+    Exception e)
+
+    {
+        log.error("解析:", e);
     }
+        return Layui.data(null,0,null);
+}
 }

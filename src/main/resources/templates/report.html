@@ -3,7 +3,7 @@
 <!--Date: 2019/3/31-->
 <!--Time: 11:06-->
 <!--To change this template use File | Settings | File Templates.-->
-
+<!DOCTYPE>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Title</title>
@@ -19,8 +19,8 @@
 
 <script type="text/html" id="toolbarDemo">
     <div class="mytext div-inline">收报率统计</div>
-    <input type="text" class="myinput div-inline" id="startTime">
-    <input type="text" class="myinput div-inline" id="endTime">
+    <input type="text" class="myinput div-inline" id="startTime" autocomplete="off">
+    <input type="text" class="myinput div-inline" id="endTime" autocomplete="off">
     <button type="text" class="layui-btn layui-btn-xs" style="width:60px" lay-event="query">查询</button>
 </script>
 <style>
@@ -33,14 +33,6 @@
     };
     layui.use(['table', 'element','layer'], function () {
         var layer = layui.layer;
-//         layer.msg('', {
-// //  time: 20000, //20s后自动关闭
-//             title: false,
-//             btn: ['明白了']
-//            // ,btnAlign: 'c'
-//             , skin: 'demo-class'
-//         });
-
         var url = './api/getReport';
         var table = layui.table;
         table.render({

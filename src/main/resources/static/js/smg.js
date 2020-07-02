@@ -4,7 +4,7 @@ layui.use(['table', 'layer', 'element'], function () {
         layer = layui.layer;
 
     var mylayer;
-    table = $.extend(table, {config: {checkName: 'noRealTime'}});
+  //  table = $.extend(table, {config: {checkName: 'noRealTime'}});
     table.render({
         elem: '#datatable'
         // , toolbar: '#toolbarDemo'
@@ -31,7 +31,7 @@ layui.use(['table', 'layer', 'element'], function () {
             , {fixed: 'right', width: 240, title: "操作", align: 'center', toolbar: '#tablebtn', unresize: true}
         ]]
         , done: function (res, page, count) {
-            console.log(res);
+           // console.log(res);
         }
     });
 
@@ -82,14 +82,6 @@ layui.use(['table', 'layer', 'element'], function () {
     });
     table.on('rowDouble(list)', function (obj) {
         console.log(obj);
-        // var index=top.layer.open({
-        //     type: 2,
-        //     title: '数据查询导出【'+obj.data["STATIONID"]+'】',
-        //     shadeClose: true,
-        //     shade: false,
-        //     area: [window.top.innerWidth+"px",window.top.innerHeight+"px"],
-        //     content:['export?stationid='+obj.data["STATIONID"]+'&date='+obj.data["OBTIME"],'no']
-        // });
     });
     /**
      * 监听按钮工具栏
@@ -112,7 +104,7 @@ layui.use(['table', 'layer', 'element'], function () {
                 //  area:'auto',
                 content: 'smg/edit?stationId=' + data['stationid'],
                 success: function (layero, index) {
-                    layer.iframeAuto(index);
+                    top.layer.iframeAuto(index);
                 }
             });
         } else if (layEvent == 'cmd') {

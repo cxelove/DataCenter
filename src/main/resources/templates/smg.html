@@ -21,9 +21,14 @@
 <script src="/static/js/smg.js"></script>
 <script type="text/html" id="tablebtn">
     <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">地图</a>
+    {{# if(d.protocol == 'LMD-S4'){ }}
     <a class="layui-btn layui-btn-xs" lay-event="cmd">管理</a>
     <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="update">升级</a>
-    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    {{# }else{  }}
+    <a class="layui-btn layui-btn-xs layui-btn-disabled" lay-event="cmd">管理</a>
+    <a class="layui-btn layui-btn-warm layui-btn-xs layui-btn-disabled" lay-event="update">升级</a>
+    {{# } }}
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" id="del">删除</a>
 </script>
 <style>
     .mytext {
@@ -32,5 +37,4 @@
         width: 120px;
     }
 </style>
-
 </html>

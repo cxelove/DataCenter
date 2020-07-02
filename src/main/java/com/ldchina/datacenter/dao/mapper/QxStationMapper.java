@@ -16,7 +16,7 @@ import java.util.List;
 public interface QxStationMapper {
     @Select("SELECT * FROM `qx_station` WHERE stationId=#{stationId} LIMIT 1")
     StationInfo getStationLastObtime(@Param("stationId")String stationId);
-    @Select("SELECT * FROM `qx_station` ORDER BY stationId")
+    @Select("SELECT * FROM `qx_station` ORDER BY protocol asc")
     List<StationInfo> getAllStations();
     @Update("UPDATE `qx_station` set obTime=#{obtime} WHERE stationId=#{stationid}")
     void updateObtime(@Param("obtime") Date obtime,@Param("stationid") String stationid);

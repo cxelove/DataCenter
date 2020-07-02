@@ -62,7 +62,7 @@ public class AppConfig {
                 for (int j = 0; j < list.size(); j++) {
                     if (stationInfo.getStationid().equals(list.get(j).stationid)) {
                         stationStatus.dataInfo = list.get(j);
-                        System.out.println("初始化缓存【" + stationStatus.stationInfo.alias + "】更新时间【" + stationStatus.stationInfo.obtime + "】");
+                     //   System.out.println("初始化缓存【" + stationStatus.stationInfo.alias + "】更新时间【" + stationStatus.stationInfo.obtime + "】");
                         list.remove(j);
                         break;
                     }

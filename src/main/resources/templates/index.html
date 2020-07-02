@@ -14,7 +14,7 @@
         <ul class="layui-nav layui-layout-right" lay-filter="rightmenu">
             <li class="layui-nav-item"><a name="home">地图</a></li>
             <li class="layui-nav-item"><a name="list">列表</a></li>
-<!--            <li class="layui-nav-item"><a name="export">导出</a></li>-->
+            <!--            <li class="layui-nav-item"><a name="export">导出</a></li>-->
             <li class="layui-nav-item">
                 <a href="javascript:;">其它</a>
                 <dl class="layui-nav-child">
@@ -59,25 +59,37 @@
     layui.use(['jquery', 'layer', 'element'], function () {
         var layerindex = -1;
         var element = layui.element;
-        $('body').on("click", "dd", function () {
+        $('body').on("dblclick", "dd", function () {
             if (layerindex != -1) {
                 layer.closeAll();
                 layerindex = -1;
             }
             // layerindex = layer.open({
             //     type: 2,
-            //     title: "[ "+this.getAttribute("data-id")+" ]",
+            //     title: "[ " + this.getAttribute("data-id") + " ]",
             //     shadeClose: true,
             //     shade: false,
             //     maxmin: true, //开启最大化最小化按钮
-            //     area: ['1200px', '640px'],
-            //     content: 'x?stationid='+this.getAttribute("data-id")
+            //     area: [window.top.innerWidth + "px", window.top.innerHeight + "px"],
+            //     content: 'detail?stationid=' + this.getAttribute("data-id")
             // });
         });
         element.on('nav(rightmenu)', function (elem) {
+            layer.closeAll();
             $("#mainiframe").attr("src", elem.attr("name"));
         })
     });
 </script>
+<style>
+    * {
+        moz-user-select:  -moz-none;
+        -moz-user-select: none;
+        -o-user-select: none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+</style>
 </body>
 </html>

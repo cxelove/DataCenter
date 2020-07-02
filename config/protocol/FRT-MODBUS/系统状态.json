@@ -7,20 +7,20 @@
 				"len":1,
 				"type":1,
 				"scale":1,
-				"content":""
+				"channelType":""
 			},
 			"02":{
 				"name":"电压",
 				"len":1,
 				"type":1,
 				"scale":10,
-				"content":"ps"
+				"channelType":"ps"
 			},
 			"03":{
 				"name":"时间",
 				"len":6,
 				"type":16,
-				"content":"obtime"			
+				"channelType":"obtime"			
 			}
 		}
 	}	

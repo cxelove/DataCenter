@@ -32,4 +32,10 @@ public class IndexController {
         }
         return mav;
     }
+    @RequestMapping("/detail")
+    public ModelAndView detial(String stationid){
+        ModelAndView mav = new ModelAndView("x");
+        mav.addObject("stationInfo", AppConfig.stationidTostationStatus.get(stationid).stationInfo);
+        return mav;
+    }
 }

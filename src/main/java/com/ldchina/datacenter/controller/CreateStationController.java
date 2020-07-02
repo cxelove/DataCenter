@@ -43,7 +43,7 @@ public class CreateStationController {
 
             for(Map.Entry<String, ChannelInfo> subChEntry: mainChEntry.getValue().entrySet()){
               ChannelInfo channelInfo = subChEntry.getValue();
-              if(channelInfo.content == null){
+              if(channelInfo.channelType == null){
                   availableChannel.put(channelInfo.key
                           +"*"+channelInfo._SensorName
                           +"*"+"["+mainChEntry.getKey()+"]"+channelInfo.name, Boolean.FALSE);
