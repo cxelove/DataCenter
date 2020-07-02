@@ -27,7 +27,7 @@ public class AppConfig {
     /**
      * 测量要素数据库键对测量要素描述类
      */
-    public static Map<String,Map<String,Map<String, ChannelInfo>>> keyMainSubToChannelInfoByProtocol = new HashMap<>();
+    public static Map<String, Map<String, Map<String, ChannelInfo>>> keyMainSubToChannelInfoByProtocol = new HashMap<>();
     /**
      * 加载所有数据库站点
      */
@@ -41,8 +41,7 @@ public class AppConfig {
     /**
      * 支持传感器类型及其测量参数
      */
-    public static Map<String, Sensor> sensorMap = new HashMap<String, Sensor>();
-    public static List<Sensor> sensorList = new ArrayList<Sensor>();
+    // sensorList = new ArrayList<Sensor>();
 
     public static AppConfig appConfig;
     @Value("${webTitle}")
@@ -61,17 +60,17 @@ public class AppConfig {
             stationInfos.forEach(stationInfo -> {
                 StationStatus stationStatus = new StationStatus(null, stationInfo);
                 for (int j = 0; j < list.size(); j++) {
-                    if (stationInfo.getSTATIONID().equals(list.get(j).STATIONID)) {
+                    if (stationInfo.getStationid().equals(list.get(j).stationid)) {
                         stationStatus.dataInfo = list.get(j);
-                        System.out.println("初始化缓存【" + stationStatus.stationInfo.alias + "】更新时间【" + stationStatus.stationInfo.OBTIME + "】");
+                        System.out.println("初始化缓存【" + stationStatus.stationInfo.alias + "】更新时间【" + stationStatus.stationInfo.obtime + "】");
                         list.remove(j);
                         break;
                     }
                 }
-                if(stationStatus.dataInfo==null){
-                    stationStatus.dataInfo = new DataInfo(stationInfo.getSTATIONID());
+                if (stationStatus.dataInfo == null) {
+                    stationStatus.dataInfo = new DataInfo(stationInfo.getStationid());
                 }
-                stationidTostationStatus.put(stationInfo.getSTATIONID(), stationStatus);
+                stationidTostationStatus.put(stationInfo.getStationid(), stationStatus);
             });
         }
         /**
@@ -86,9 +85,9 @@ public class AppConfig {
                 long ms = new Date().getTime();
                 for (Map.Entry<String, StationStatus> entry : stationidTostationStatus.entrySet()) {
                     if (Math.abs((entry.getValue().stationInfo.commtime.getTime() - ms) / 1000 / 60) > IOSESSION_TIMEOUT_MIN) {
-                        if(entry.getValue().ioSession!=null){
+                        if (entry.getValue().ioSession != null) {
                             entry.getValue().ioSession.close(true);
-                            System.out.println("Time Out:"+entry.getKey());
+                            System.out.println("Time Out:" + entry.getKey());
                         }
 
                     }
@@ -103,32 +102,32 @@ public class AppConfig {
         List<String> pathList = JsonUtil.getDirectories("./config/protocol");
         pathList.forEach((path) -> {
             //遍历所有协议文件夹
-            String protocol = path.substring(path.lastIndexOf("\\")+1);
-         //   List<String> subPathList = JsonUtil.getDirectories(path);
-            Map<String,Map<String, ChannelInfo>> mainchToSubMap = new LinkedHashMap<>();
+            String protocol = path.substring(path.lastIndexOf("\\") + 1);
+            //   List<String> subPathList = JsonUtil.getDirectories(path);
+            Map<String, Map<String, ChannelInfo>> mainchToSubMap = new LinkedHashMap<>();
 
-         //   subPathList.forEach((subpath) -> {
-                //遍历每个协议文件夹里面的文件
-                sensorList = JsonUtil.getAllJavaObjInDir(path, Sensor.class);
-                sensorList.forEach(s -> {
-                    //遍历每个文件里面的协议
-                    for (Map.Entry<String, Map<String, ChannelInfo>> entry : s.channel.entrySet()) {
-                        //遍历子协议ChannelInfo中的MainId
-                        sensorMap.put(entry.getKey(), s);
-                        Map<String, ChannelInfo> subIdToChannelInfo = new LinkedHashMap<>();
+            //   subPathList.forEach((subpath) -> {
+            //遍历每个协议文件夹里面的文件
+            List<Sensor> sensorList = JsonUtil.getAllJavaObjInDir(path, Sensor.class);
+            sensorList.forEach(s -> {
+                //遍历每个文件里面的协议
+                for (Map.Entry<String, Map<String, ChannelInfo>> entry : s.channel.entrySet()) {
+                    //遍历子协议ChannelInfo中的MainId
+                    // sensorMap.put(entry.getKey(), s);
+                    Map<String, ChannelInfo> subIdToChannelInfo = new LinkedHashMap<>();
 
-                        Map<String, ChannelInfo> channelInfoMap = entry.getValue();
-                        for (Map.Entry<String, ChannelInfo> channelInfoEntry : channelInfoMap.entrySet()) {
-                            //遍历所有子协议SubId
-                            ChannelInfo channelInfo = channelInfoEntry.getValue();
-                            channelInfo.key = "_" + entry.getKey() + "_" + channelInfoEntry.getKey();
-                            channelInfo._SensorName = s.name;
-                            subIdToChannelInfo.put(channelInfoEntry.getKey(), channelInfo);
-                        }//结束遍历所有子协议SubId
-                        mainchToSubMap.put(entry.getKey(),subIdToChannelInfo);
-                    }//结束遍历子协议ChannelInfo中的MainId
-                });//结束遍历每个文件里面的协议
-        //    });//结束遍历每个协议文件夹里面的文件
+                    Map<String, ChannelInfo> channelInfoMap = entry.getValue();
+                    for (Map.Entry<String, ChannelInfo> channelInfoEntry : channelInfoMap.entrySet()) {
+                        //遍历所有子协议SubId
+                        ChannelInfo channelInfo = channelInfoEntry.getValue();
+                        channelInfo.key = "_" + entry.getKey() + "_" + channelInfoEntry.getKey();
+                        channelInfo._SensorName = s.name;
+                        subIdToChannelInfo.put(channelInfoEntry.getKey(), channelInfo);
+                    }//结束遍历所有子协议SubId
+                    mainchToSubMap.put(entry.getKey(), subIdToChannelInfo);
+                }//结束遍历子协议ChannelInfo中的MainId
+            });//结束遍历每个文件里面的协议
+            //    });//结束遍历每个协议文件夹里面的文件
             keyMainSubToChannelInfoByProtocol.put(protocol, mainchToSubMap);
         }); //结束遍历协议文件夹
 

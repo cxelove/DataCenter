@@ -152,21 +152,21 @@ public class ProcThread implements Runnable {
 
         DataInfo dataInfo = new DataInfo();
         String val = "", key = "";
-        dataInfo.STATIONID = String.valueOf(lufftCommonCmd.srcId);
-        stationId = dataInfo.STATIONID;
-        if (StatusNo.OK != checkStationId(dataInfo.STATIONID)) {
-            System.out.println("未知站点号：" + dataInfo.STATIONID);
+        dataInfo.stationid = String.valueOf(lufftCommonCmd.srcId);
+        stationId = dataInfo.stationid;
+        if (StatusNo.OK != checkStationId(dataInfo.stationid)) {
+            System.out.println("未知站点号：" + dataInfo.stationid);
             return;
         }
 
-        Set keySet = AppConfig.keyToWebconfigByStationid.get(dataInfo.STATIONID).keySet();
+        Set keySet = AppConfig.keyToWebconfigByStationid.get(dataInfo.stationid).keySet();
 
         switch (lufftCommonCmd.cmd) {
             case LufftCommonCmd.Cmd_MinUpload:
                 byte[] rep = new byte[]{0x01, 0x00, 0x01, 0x00, 0x10, 0x18, 0x00, 0x01, 0x02, 0x00, 0x03, (byte) 0xBB, (byte) 0xBB, 0x04};
                 ioSession.write(IoBuffer.wrap(rep));
                 logString = "";
-                String sqlDataTable1 = "replace into `data_" + dataInfo.STATIONID + "` ('";
+                String sqlDataTable1 = "replace into `data_" + dataInfo.stationid + "` ('";
                 String sqlLatestTable2 = " values('";
                 String sqlLatestTable = "";
 
@@ -190,7 +190,7 @@ public class ProcThread implements Runnable {
                             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-M-d H:m:s");
                             LocalDateTime ldt = LocalDateTime.parse(obTimeString, dtf);
                             logString += channelInfo.name + ":" + dtf.format(ldt) + ";";
-                            dataInfo.OBTIME = Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+                            dataInfo.obtime = Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
                             break;
                         case 4/**/:
                             val = Float.toString(bytesToShort(lufftCommonCmd.channelData, i + 3) / (float) channelInfo.scale);
@@ -220,9 +220,9 @@ public class ProcThread implements Runnable {
                     i = i + channelInfo.len + 3;
                 }
                 log.info(logString);
-                procStationStatus(dataInfo.STATIONID, ioSession);
+                procStationStatus(dataInfo.stationid, ioSession);
                 insertData(dataInfo);
-                if (AppConfig.stationidTostationStatus.get(dataInfo.STATIONID).dataInfo.OBTIME.before(dataInfo.OBTIME)) {
+                if (AppConfig.stationidTostationStatus.get(dataInfo.stationid).dataInfo.obtime.before(dataInfo.obtime)) {
                     insertLatestData(dataInfo);
                 }
                 break;
@@ -256,14 +256,14 @@ public class ProcThread implements Runnable {
             DataInfo dataInfo = new DataInfo();
             int posion = 4;
             String[] ss = s.split(",");
-            dataInfo.STATIONID = ss[0].substring(1);
-            stationId = dataInfo.STATIONID;
-            if (StatusNo.OK != checkStationId(dataInfo.STATIONID)) {
-                log.warn("未知站点号：" + dataInfo.STATIONID);
+            dataInfo.stationid = ss[0].substring(1);
+            stationId = dataInfo.stationid;
+            if (StatusNo.OK != checkStationId(dataInfo.stationid)) {
+                log.warn("未知站点号：" + dataInfo.stationid);
                 return;
             }
-            String logString = "站点：" + dataInfo.STATIONID + ";";
-            dataInfo.OBTIME = TimeUtil.parseDate(ss[2], "yyyyMMddHHmm");
+            String logString = "站点：" + dataInfo.stationid + ";";
+            dataInfo.obtime = TimeUtil.parseDate(ss[2], "yyyyMMddHHmm");
             logString += "时间：" + ss[2] + ";";
             for (int i = 0; i < ss[3].length(); i++) { // 根据报文内传感器类型字段确定有多少种传感器
                 String mainKey = String.valueOf(ss[3].charAt(i));
@@ -300,13 +300,17 @@ public class ProcThread implements Runnable {
                 logString += "电压" + ":" + dataInfo.PS + ";";
             }
             log.info(logString);
-            procStationStatus(dataInfo.STATIONID, ioSession);
+            procStationStatus(dataInfo.stationid, ioSession);
             insertData(dataInfo);
-            long dateOld = AppConfig.stationidTostationStatus.get(dataInfo.STATIONID).stationInfo.OBTIME.getTime();
-            long diff = (dataInfo.OBTIME.getTime() - dateOld) / 1000 / 60;
+            long diff = 1; //默认为正常报文（新建站点时，stationInfo.obtime ==null）
+            long dateOld=0;
+            if(AppConfig.stationidTostationStatus.get(dataInfo.stationid).stationInfo.obtime != null) {
+                dateOld = AppConfig.stationidTostationStatus.get(dataInfo.stationid).stationInfo.obtime.getTime();
+                diff = (dataInfo.obtime.getTime() - dateOld) / 1000 / 60;
+            }
             if (diff < 0) {
                 // 说明这条报文是补包的报文，需删除补包表即可，无须更新站点信息
-                DbUtil.dbMapperUtil.qxReuploadMapper.delete(dataInfo.STATIONID, dataInfo.OBTIME);
+                DbUtil.dbMapperUtil.qxReuploadMapper.delete(dataInfo.stationid, dataInfo.obtime);
             } else {
                 /*数据和缓存比如果数据是新的则更新缓存，插入最新数据表*/
                 System.out.println("更新缓存：" + insertLatestData(dataInfo));
@@ -317,7 +321,7 @@ public class ProcThread implements Runnable {
                     obtime.setTime(new Date(dateOld));
                     for (int i = 1; i < insCount; i++) {
                         obtime.add(Calendar.MINUTE, 1);
-                        DbUtil.dbMapperUtil.qxReuploadMapper.save(dataInfo.STATIONID, obtime.getTime());
+                        DbUtil.dbMapperUtil.qxReuploadMapper.save(dataInfo.stationid, obtime.getTime());
                     }
                 }
             }
@@ -384,22 +388,22 @@ public class ProcThread implements Runnable {
      * @return
      */
     StatusNo insertLatestData(DataInfo dataInfo) {
-        AppConfig.stationidTostationStatus.get(dataInfo.STATIONID).dataInfo = dataInfo;
-        AppConfig.stationidTostationStatus.get(dataInfo.STATIONID).stationInfo.OBTIME = dataInfo.OBTIME;
-        String sqlString = "MERGE INTO QX_LATEST ( `stationid`, `obtime`,`ps`, `data`) VALUES ( '" + dataInfo.STATIONID
-                + "', '" + TimeUtil.format(dataInfo.OBTIME, "yyyy-MM-dd HH:mm:00") + "', '" + dataInfo.PS + "', '"
+        AppConfig.stationidTostationStatus.get(dataInfo.stationid).dataInfo = dataInfo;
+        AppConfig.stationidTostationStatus.get(dataInfo.stationid).stationInfo.obtime = dataInfo.obtime;
+        String sqlString = "MERGE INTO QX_LATEST ( `stationid`, `obtime`,`ps`, `data`) VALUES ( '" + dataInfo.stationid
+                + "', '" + TimeUtil.format(dataInfo.obtime, "yyyy-MM-dd HH:mm:00") + "', '" + dataInfo.PS + "', '"
                 + JSON.toJSONString(dataInfo.val) + "')";
         try {
             DbUtil.dbMapperUtil.iSqlMapper.sqlput(sqlString); // 插入数据
             sqlString = "update `qx_station` set obtime='"
-                    + TimeUtil.format(dataInfo.OBTIME, "yyyy-MM-dd HH:mm:00")
+                    + TimeUtil.format(dataInfo.obtime, "yyyy-MM-dd HH:mm:00")
                     + "' where stationid='"
-                    + dataInfo.STATIONID
+                    + dataInfo.stationid
                     + "'";
             DbUtil.dbMapperUtil.iSqlMapper.sqlput(sqlString);
             return StatusNo.OK;
         } catch (Exception ex) {
-            log.error("数据库错误【" + dataInfo.STATIONID + "】：", ex.getStackTrace()[0]);
+            log.error("数据库错误【" + dataInfo.stationid + "】：", ex.getStackTrace()[0]);
             return StatusNo.数据库错误;
         }
     }
@@ -411,8 +415,8 @@ public class ProcThread implements Runnable {
      * @return
      */
     StatusNo insertData(DataInfo dataInfo) {
-        String sqlDataString1 = "merge into `data_" + dataInfo.STATIONID + "` ( `obtime`,`ps`";
-        String sqlDataString2 = ") values ( '" + TimeUtil.format(dataInfo.OBTIME, "yyyy-MM-dd HH:mm:00") + "', '"
+        String sqlDataString1 = "merge into `data_" + dataInfo.stationid + "` ( `obtime`,`ps`";
+        String sqlDataString2 = ") values ( '" + TimeUtil.format(dataInfo.obtime, "yyyy-MM-dd HH:mm:00") + "', '"
                 + dataInfo.PS + "'";
         for (Map.Entry<String, String> entry : dataInfo.val.entrySet()) {
             sqlDataString1 += " ,`" + entry.getKey() + "`";

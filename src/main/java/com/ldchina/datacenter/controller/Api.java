@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
@@ -69,29 +70,46 @@ public class Api {
     public Map getLatestById(String stationId) {
         if (stationId == null)
             return null;
-        //JSONObject jsonObject = n
         Map<String, Object> map = new HashMap<>();
         map.put("data", AppConfig.stationidTostationStatus.get(stationId).dataInfo);
         List<ChannelInfo> list = new ArrayList<>();
-//		for( AppConfig.stationidTostationStatus.get(stationId).stationInfo)
-//			AppConfig.
-		String protocol = AppConfig.stationidTostationStatus.get(stationId).stationInfo.protocol;
-		for(Map.Entry<String, WebConfig> webConfigEntry:AppConfig.keyToWebconfigByStationid.get(stationId).entrySet()){
-			String mainId = webConfigEntry.getKey().split("_")[1];
-			String subId = webConfigEntry.getKey().split("_")[2];
-			if(webConfigEntry.getValue().mapDisplay){
-				list.add(AppConfig.keyMainSubToChannelInfoByProtocol.get(protocol).get(mainId).get(subId));
-			}
-		}
-
-//        for (Map.Entry<String, Map<String, ChannelInfo>> mapEntry : AppConfig.keyMainSubToChannelInfoByProtocol.get(AppConfig.stationidTostationStatus.get(stationId).stationInfo.protocol).entrySet()) {
-//            for (Map.Entry<String, ChannelInfo> channelInfoEntry : mapEntry.getValue().entrySet()) {
-//                if (AppConfig.keyToWebconfigByStationid.get(channelInfoEntry.getValue().key).)
-//            }
-//        }
+        String protocol = AppConfig.stationidTostationStatus.get(stationId).stationInfo.protocol;
+        for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.keyToWebconfigByStationid.get(stationId).entrySet()) {
+            String mainId = webConfigEntry.getKey().split("_")[1];
+            String subId = webConfigEntry.getKey().split("_")[2];
+            if (webConfigEntry.getValue().mapDisplay) {
+                list.add(AppConfig.keyMainSubToChannelInfoByProtocol.get(protocol).get(mainId).get(subId));
+            }
+        }
         String js = JSONObject.toJSONString(list);
-        map.put("title",js);
+        map.put("title", js);
         return map;
+    }
+
+    @RequestMapping(value = "/updateWebConfigByStationId", method = RequestMethod.POST)
+    @ResponseBody
+    public int updateWebConfigByStationId(String stationId, HttpServletRequest request) {
+        String ds = request.getParameter("postData");
+        JSONObject json = JSONObject.parseObject(ds); //使用net.sf.json.JSONObject对象来解析json
+        Set valKeySet = json.keySet();
+        String sql = "";
+        Map<String, WebConfig> retMap = new HashMap<>();
+        try{
+            for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.keyToWebconfigByStationid.get(stationId).entrySet()) {
+                if (valKeySet.contains(webConfigEntry.getKey())) {
+                    AppConfig.keyToWebconfigByStationid.get(stationId).get(webConfigEntry.getKey()).mapDisplay = true;
+                    sql = "UPDATE `web_config` SET `mapdisplay` = true WHERE `key`='"+webConfigEntry.getKey()+"' AND `stationid` = '" + stationId+"'";
+                } else {
+                    AppConfig.keyToWebconfigByStationid.get(stationId).get(webConfigEntry.getKey()).mapDisplay = false;
+                    sql = "UPDATE `web_config` SET `mapdisplay` = false WHERE `key`='"+webConfigEntry.getKey()+"' AND `stationid` = '" + stationId+"'";
+                }
+                DbUtil.dbMapperUtil.iSqlMapper.sqlput(sql);
+            }
+            return 0;
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return 1;
+        }
     }
 
     /**
@@ -102,7 +120,7 @@ public class Api {
     public Map<String, String> getSta() {
         Map<String, String> map = new HashMap<String, String>();
         for (Map.Entry<String, StationStatus> entry : AppConfig.stationidTostationStatus.entrySet()) {
-            map.put(entry.getKey(), (entry.getValue().ioSession==null)?"STATION_OFFLINE":"STATION_ONLINE");
+            map.put(entry.getKey(), (entry.getValue().ioSession == null) ? "STATION_OFFLINE" : "STATION_ONLINE");
         }
         return map;
     }
@@ -135,7 +153,7 @@ public class Api {
     @RequestMapping("/startUpdate")
     public Map<String, String> updateBin(String stationId, HttpServletRequest request) {
         Map<String, String> map = new HashMap<>();
-       // Sessions sessions = MinaTcpServerHandler.sessionsMap.get(stationId);
+        // Sessions sessions = MinaTcpServerHandler.sessionsMap.get(stationId);
         if (AppConfig.stationidTostationStatus
                 .get(stationId).ioSession != null) {
             if (AppConfig.stationidTostationStatus
@@ -170,8 +188,8 @@ public class Api {
             if (!entry.getValue().stationInfo.measure.equals(measure)) continue;
             Map<String, Object> map = new HashMap<String, Object>();
             DataInfo dataInfo = entry.getValue().dataInfo;
-            map.put("STATIONID", dataInfo.STATIONID);
-            map.put("OBTIME", dataInfo.OBTIME);
+            map.put("STATIONID", dataInfo.stationid);
+            map.put("OBTIME", dataInfo.obtime);
             map.put("PS", dataInfo.PS);
             for (Map.Entry<String, String> mp : dataInfo.val.entrySet()) {
                 map.put(mp.getKey(), mp.getValue());
@@ -221,11 +239,11 @@ public class Api {
             if (full > 0) {
                 for (Map.Entry<String, StationStatus> entry : AppConfig.stationidTostationStatus.entrySet()) {
                     DataInfo dataInfo = entry.getValue().dataInfo;
-                    if (DbUtil.dbMapperUtil.iSqlMapper.isTableExit("DATA_M_" + dataInfo.STATIONID)) {
-                        ReportData reportData = new ReportData(dataInfo.STATIONID,
-                                AppConfig.stationidTostationStatus.get(dataInfo.STATIONID).stationInfo.getAlias());
+                    if (DbUtil.dbMapperUtil.iSqlMapper.isTableExit("DATA_M_" + dataInfo.stationid)) {
+                        ReportData reportData = new ReportData(dataInfo.stationid,
+                                AppConfig.stationidTostationStatus.get(dataInfo.stationid).stationInfo.getAlias());
 
-                        sqlString = "SELECT COUNT(*) FROM DATA_M_" + dataInfo.STATIONID
+                        sqlString = "SELECT COUNT(*) FROM DATA_M_" + dataInfo.stationid
                                 + " WHERE obtime < DATEADD(dd,1,'" + endTime + "') AND obTime >= '" + startTime + "'";
                         reportData.count = (Long) DbUtil.dbMapperUtil.iSqlMapper.sqlget(sqlString).get(0)
                                 .get("COUNT(*)");

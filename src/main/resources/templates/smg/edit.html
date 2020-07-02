@@ -1,68 +1,53 @@
-<!--Created by IntelliJ IDEA.-->
-<!--User: chen-->
-<!--Date: 2019/3/25-->
-<!--Time: 14:31-->
-<!--To change this template use File | Settings | File Templates.-->
-
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Insert title here</title>
     <link rel="stylesheet" href="/static/js/mylayui/css/layui.css">
-
 </head>
-<body style="padding-top: 20px;">
-<div style="width:100%;text-align:center;">
-    <form class="layui-form" action="">
+<body>
+<form class="layui-form" action="">
+    <div class="layui-form" id="demo1" style="margin: 20px">
         <div class="layui-form-item">
-            <div class="layui-inline">
-                <label class="layui-form-label">站点</label>
-                <div class="layui-input-inline">
-                    <input type="text" name="stationid" th:value='${stationInfo.stationid}'
-                           autocomplete="off"
-                           class="layui-input layui-disabled">
-                </div>
+            <!--            <label class="layui-form-label">复选框</label>-->
+            <div class="layui-input-block">
+                <input type="checkbox"  style="margin-bottom:20px" th:each="map: ${mapList}" th:title="${map.key}"
+                       th:name="${map.value.key}"  th:checked="${map.value.mapDisplay}" >
             </div>
         </div>
-        <div class="layui-form-item">
-            <div class="layui-inline">
-                <label class="layui-form-label">站名</label>
-                <div class="layui-input-inline">
-                    <input type="text" name="alias" th:value='${stationInfo.alias}'
-                           autocomplete="off"
-                           class="layui-input">
-                </div>
-            </div>
-        </div>
+
         <div class="layui-form-item">
             <div class="layui-input-block">
-                <button class="layui-btn layui-btn-ms">拾取坐标</button>
+                <button type="submit" lay-skin="primary" class="layui-btn" lay-submit="" lay-filter="demo1" id="submit">
+                    确定
+                </button>
             </div>
         </div>
-        <div class="layui-form-item">
-            <div class="layui-input-block">
-                <button class="layui-btn layui-btn-ms" lay-submit lay-filter="formSubmit">提交</button>
-                <button type="reset" class="layui-btn layui-btn-primary layui-btn-ms">重置</button>
-            </div>
-        </div>
-    </form>
-</div>
+    </div>
+</form>
 </body>
 <script src="/static/js/mylayui/layui.js"></script>
+<script src="/static/js/lib/jquery-3.3.1.min.js"></script>
 <script>
-    layui.use(['form', 'layer'], function () {
-        var $ = layui.jquery;
-        var form = layui.form,
-            layer = layui.layer;
-        //监听提交
-        form.on('submit(formSubmit)', function (data) {
-            $.post("../smg/updateStationInfo", JSON.stringify(data.field), function (result) {
-                }
-            );
-            var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
-            parent.layer.close(index);
-            parent.location.reload();
+
+    layui.use(['form', 'element', 'layer'], function () {
+        var url = './api/getReport';
+        var form = layui.form;
+        form.render();
+        form.on('submit(demo1)', function (data) {
+            var json = JSON.stringify(data.field);
+            var loading = layer.load(1, {
+                shade: false,
+                time: 5 * 1000
+            });
+            $.post('../api/updateWebConfigByStationId?stationId='+[[${stationid}]],{postData:json},function(result){
+               console.log(result);
+            });
+            layer.close(loading);
+            var index = top.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+            top.layer.close(index); //再执行关闭
         });
     });
 </script>
 </html>
+

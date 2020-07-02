@@ -144,7 +144,7 @@ public class CreateStationController {
             DbUtil.dbMapperUtil.iSqlMapper.sqlput(sqlConfigTableString);
             DbUtil.dbMapperUtil.iSqlMapper.sqlput("commit");
             StationInfo qxStation = new StationInfo();
-            qxStation.STATIONID = stationid;
+            qxStation.stationid = stationid;
             qxStation.protocol = protocol;
             qxStation.measure = measure;
             qxStation.alias = stationname;

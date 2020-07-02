@@ -1,10 +1,12 @@
 package com.ldchina.datacenter.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.ldchina.datacenter.AppConfig;
 import com.ldchina.datacenter.dao.entity.StationInfo;
 
+import com.ldchina.datacenter.dao.entity.WebConfig;
 import com.ldchina.datacenter.utils.DbUtil;
 
 import org.springframework.boot.system.ApplicationHome;
@@ -20,7 +22,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -32,16 +36,25 @@ public class SMGController {
         return "smg";
     }
 
-    @RequestMapping(value = "/xy")
+    @RequestMapping(value = "/edit")
     public ModelAndView edit(String stationId) {
-        if(stationId==null) return null;
-        StationInfo stationInfo = DbUtil.dbMapperUtil.qxStationMapper.getStationInfoById(stationId);
-        if(stationInfo.getLat()==null || stationInfo.getLng()==null)
-        {
-            stationInfo.setLat(0d);
-            stationInfo.setLng(0d);
+        if (stationId == null) return null;
+        ModelAndView mav = new ModelAndView("smg/edit");
+        String protocol = AppConfig.stationidTostationStatus.get(stationId).stationInfo.protocol;
+      //  List<Map<String, WebConfig>> retList = new ArrayList<>();
+        Map<String, WebConfig> retMap = new HashMap<>();
+        for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.keyToWebconfigByStationid.get(stationId).entrySet()) {
+            String mainKey = webConfigEntry.getKey().split("_")[1];
+            String subKey = webConfigEntry.getKey().split("_")[2];
+
+            retMap.put(AppConfig.keyMainSubToChannelInfoByProtocol
+                    .get(protocol)
+                    .get(mainKey)
+                    .get(subKey).name, webConfigEntry.getValue());
         }
-        return new ModelAndView("smg/xy", "qxStation", stationInfo);
+        mav.addObject("mapList", retMap);
+        mav.addObject("stationid", stationId);
+        return mav;
     }
 
     @RequestMapping(value = "/cmd")
@@ -52,50 +65,54 @@ public class SMGController {
     }
 
     @RequestMapping(value = "/update")
-    public ModelAndView update(String stationId , HttpServletRequest request) {
+    public ModelAndView update(String stationId, HttpServletRequest request) {
         ModelAndView mav = new ModelAndView("smg/update");
-        String path = new ApplicationHome(getClass()).getSource().getParentFile().toString() +"\\upload\\bin";
+        String path = new ApplicationHome(getClass()).getSource().getParentFile().toString() + "\\upload\\bin";
         File file = new File(path);
         File[] fileList = file.listFiles();
         mav.addObject("stationid", stationId);
-        String s="";
-        if(AppConfig.stationidTostationStatus
-                .get(stationId).ioSession == null){
-            s=s+"[ 站点不在线 ] ";
+        String s = "";
+        if (AppConfig.stationidTostationStatus
+                .get(stationId).ioSession == null) {
+            s = s + "[ 站点不在线 ] ";
             mav.addObject("ready", 0);
-        }else{
-            s=s+"[ 站点在线 ] ";
-            if(fileList!=null && fileList.length>0){
-                s=s+"文件信息："+fileList[0].getName()+" "+fileList[0].length()+"B";
+        } else {
+            s = s + "[ 站点在线 ] ";
+            if (fileList != null && fileList.length > 0) {
+                s = s + "文件信息：" + fileList[0].getName() + " " + fileList[0].length() + "B";
                 mav.addObject("ready", 1);
-            }else{
-                s=s+"请上传程序文件.";
+            } else {
+                s = s + "请上传程序文件.";
                 mav.addObject("ready", 2);
             }
         }
         mav.addObject("status", s);
         return mav;
     }
+
     @RequestMapping(value = "/del")
-    public String delStation(String stationId){
-        if(!(stationId==null || stationId==""||stationId=="undefined")){
-        	//ReceiveThread.stationStatusMap.remove(stationId);
-            DbUtil.dbMapperUtil.iSqlMapper.sqlput("DROP TABLE IF EXISTS DATA_M_"+stationId);            
-            DbUtil.dbMapperUtil.iSqlMapper.sqlput("DELETE FROM `qx_reupload` WHERE `stationid`='"+stationId+"'");
-            DbUtil.dbMapperUtil.iSqlMapper.sqlput("DELETE FROM `qx_latest` WHERE `stationid`='"+stationId+"'");
-            DbUtil.dbMapperUtil.iSqlMapper.sqlput("DELETE FROM `qx_station` WHERE `stationid`='"+stationId+"'");
+    public String delStation(String stationId) {
+        if (!(stationId == null || stationId == "" || stationId == "undefined")) {
+            //ReceiveThread.stationStatusMap.remove(stationId);
+            DbUtil.dbMapperUtil.iSqlMapper.sqlput("DROP TABLE IF EXISTS DATA_" + stationId);
+            DbUtil.dbMapperUtil.iSqlMapper.sqlput("DELETE FROM `qx_reupload` WHERE `stationid`='" + stationId + "'");
+            DbUtil.dbMapperUtil.iSqlMapper.sqlput("DELETE FROM `qx_latest` WHERE `stationid`='" + stationId + "'");
+            DbUtil.dbMapperUtil.iSqlMapper.sqlput("DELETE FROM `qx_station` WHERE `stationid`='" + stationId + "'");
+            DbUtil.dbMapperUtil.iSqlMapper.sqlput("DELETE FROM `web_config` WHERE `stationid`='" + stationId + "'");
             AppConfig.stationidTostationStatus.remove(stationId);
+            AppConfig.keyToWebconfigByStationid.remove(stationId);
         }
         return "smg";
     }
+
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     @ResponseBody
     public Map<String, Object> upload(MultipartFile file,
                                       HttpServletRequest request) {
         Map<String, Object> map = new HashMap<String, Object>();
         try {
-            File f = new File(new ApplicationHome(getClass()).getSource().getParentFile().toString() +"\\upload\\bin");
-            if(!f.exists()) f.mkdirs();
+            File f = new File(new ApplicationHome(getClass()).getSource().getParentFile().toString() + "\\upload\\bin");
+            if (!f.exists()) f.mkdirs();
             DeleteAll(f);
             int bin = uploadFile(file, f.toString());
             map.put("code", 0);
@@ -106,11 +123,14 @@ public class SMGController {
         return map;
     }
 
+
+
     @Resource
     protected HttpServletRequest request;
 
     /**
      * 设置更新站点信息
+     *
      * @return
      */
     @ResponseBody
@@ -119,17 +139,17 @@ public class SMGController {
         StringBuffer jb = new StringBuffer();
         String line = null;
         //try {
-            BufferedReader reader = request.getReader();
-            while ((line = reader.readLine()) != null)
-                jb.append(line);
-            JSONObject jsonObject = JSONObject.parseObject(jb.toString());
-            StationInfo stationInfo = JSON.toJavaObject(jsonObject, StationInfo.class);
-            DbUtil.dbMapperUtil.qxStationMapper.updateStationInfoById(stationInfo);
-        AppConfig.stationidTostationStatus.get(stationInfo.STATIONID).stationInfo= stationInfo;
-            return "success";
-     //   } catch (Exception ex) { /*report an error*/ }
+        BufferedReader reader = request.getReader();
+        while ((line = reader.readLine()) != null)
+            jb.append(line);
+        JSONObject jsonObject = JSONObject.parseObject(jb.toString());
+        StationInfo stationInfo = JSON.toJavaObject(jsonObject, StationInfo.class);
+        DbUtil.dbMapperUtil.qxStationMapper.updateStationInfoById(stationInfo);
+        AppConfig.stationidTostationStatus.get(stationInfo.stationid).stationInfo = stationInfo;
+        return "success";
+        //   } catch (Exception ex) { /*report an error*/ }
 
-      //  return "fail";
+        //  return "fail";
 
     }
 
@@ -146,18 +166,19 @@ public class SMGController {
 
         return 0;
     }
+
     private static void DeleteAll(File dir) {
         if (dir.isFile()) {
             System.out.println(dir + " : " + dir.delete());
             return;
         } else {
             File[] files = dir.listFiles();
-            if(files!=null) {
+            if (files != null) {
                 for (File file : files) {
                     DeleteAll(file);
                 }
             }
         }
-       // System.out.println(dir + " : " + dir.delete());
+        // System.out.println(dir + " : " + dir.delete());
     }
 }

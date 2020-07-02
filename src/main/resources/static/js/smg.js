@@ -10,6 +10,10 @@ layui.use(['table', 'layer', 'element'], function () {
         // , toolbar: '#toolbarDemo'
         //  , defaultToolbar: ['']
         , url: './api/getStations'
+        , initSort: {
+            field: 'protocol' //排序字段，对应 cols 设定的各字段名
+            , type: 'asc' //排序方式  asc: 升序、desc: 降序、null: 默认排序
+        }
         , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
         , cols: [[
             {field: 'stationid', width: 80, title: '站点号'}
@@ -53,7 +57,7 @@ layui.use(['table', 'layer', 'element'], function () {
      * @param data
      */
     function delstation(data) {
-       var index= top.layer.confirm('数据删除后无法恢复，确认删除？', {icon: 3, title: '警告'}, function (index) {
+        var index = top.layer.confirm('数据删除后无法恢复，确认删除？', {icon: 3, title: '警告'}, function (index) {
             $.ajax({
                 url: "/smg/del?stationId=" + data["stationid"],
                 type: "get",
@@ -76,7 +80,7 @@ layui.use(['table', 'layer', 'element'], function () {
         $.post("../smg/updateStationInfo", JSON.stringify(data), function (result) {
         });
     });
-    table.on('rowDouble(list)', function(obj){
+    table.on('rowDouble(list)', function (obj) {
         console.log(obj);
         // var index=top.layer.open({
         //     type: 2,
@@ -87,16 +91,6 @@ layui.use(['table', 'layer', 'element'], function () {
         //     content:['export?stationid='+obj.data["STATIONID"]+'&date='+obj.data["OBTIME"],'no']
         // });
     });
-    //以复选框事件为例
-    // table.on('checkbox(list)', function (obj) {
-    //     console.log(obj)
-    //     obj.data.noRealTime = obj.checked;
-    //     var value = obj.value //得到修改后的值
-    //         , data = obj.data //得到所在行所有键值
-    //         , field = obj.field; //得到字段
-    //     $.post("../smg/updateStationInfo", JSON.stringify(data), function (result) {
-    //     });
-    // });
     /**
      * 监听按钮工具栏
      */
@@ -110,21 +104,15 @@ layui.use(['table', 'layer', 'element'], function () {
         if (layEvent === 'edit') {
             mylayer = top.layer.open({
                 type: 2,
-                title: "设置坐标 [ " + data['stationid'] + "_" + data['alias'] + " ]",
+                title: "设置地图显示要素 [ " + data['stationid'] + "_" + data['alias'] + " ]",
                 shadeClose: true,
                 shade: false,
                 maxmin: false, //开启最大化最小化按钮
-                area: ['800px', '640px'],
-                content: 'smg/xy?stationId=' + data['stationid'],
-                cancel: function (index) {
-                    var res = top["layui-layer-iframe" + index].callback();
-                    if (res == 0) return;
-                    else {
-                        data['lng'] = res['lng'];
-                        data['lat'] = res['lat'];
-                        $.post("../smg/updateStationInfo", JSON.stringify(data), function (result) {
-                        });
-                    }
+                area: ['800px', 'auto'],
+                //  area:'auto',
+                content: 'smg/edit?stationId=' + data['stationid'],
+                success: function (layero, index) {
+                    layer.iframeAuto(index);
                 }
             });
         } else if (layEvent == 'cmd') {

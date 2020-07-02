@@ -34,7 +34,7 @@ public class ListController {
         });
         for (Map.Entry<String, StationStatus> e: list) {
             if(ret.get(e.getValue().stationInfo.measure)==null){
-                ret.put(e.getValue().stationInfo.measure, Layui.getListColsByStationid(e.getValue().stationInfo.STATIONID));
+                ret.put(e.getValue().stationInfo.measure, Layui.getListColsByStationid(e.getValue().stationInfo.stationid));
             }
         }
         return  ret;

@@ -37,7 +37,7 @@ function f() {
                     }
                     if (allMarker[key].getIcon().imageOffset.height != (0 - imgOffY * 25)) {
                         allMarker[key].setIcon(
-                            new BMap.Icon('/static/image/markers.png', new BMap.Size(23, 25), {
+                            new BMap.Icon('/static/image/markers2.png', new BMap.Size(23, 25), {
                                 offset: new BMap.Size(10, 25), // 指定定位位置
                                 imageOffset: new BMap.Size(0, 0 - imgOffY * 25) // 设置图片偏移,
                             }));
@@ -66,11 +66,15 @@ function mapMarkClick() {
             var html = "<div style='height:auto;padding:5px;'>  <div class='user-map-info-header' style='font-weight:bold ;'>" + label + "</div>" +
                 "<div class='one-info-content'>" +
                 "<hr/><table>" +
-                "<tr><td class='tbtdl'>时间</td><td>：" + (new Date(data['data']['OBTIME'])).Format("yyyy-MM-dd hh:mm") + "</td></tr>" +
-                "<tr><td class='tbtdl'>电压</td><td>：" + data['data']['PS'] + " V</td></tr>";
+                "<tr><td class='tbtdl'>时间</td><td>：" + (new Date(data['data']['obtime'])).Format("yyyy-MM-dd hh:mm") + "</td></tr>" +
+                "<tr><td class='tbtdl'>电压</td><td>：" + ((data['data']['PS'] == null) ? '---' : data['data']['PS']) + " V</td></tr>";
             data['title'] = JSON.parse(data['title']);
             for (var i in data['title']) {
-                html += "<tr><td class='tbtdl'>" + data['title'][i].name + "</td><td>：" + data['data']['val'][data['title'][i].key] + " " + data['title'][i].unit + "</td></tr>";
+                html += "<tr><td class='tbtdl'>"
+                    + data['title'][i].name + "</td><td>："
+                    + ((data['data']['val'][data['title'][i].key] == undefined) ? '---' : data['data']['val'][data['title'][i].key])
+                    + " " + ((data['title'][i].unit == undefined) ? '' : data['title'][i].unit)
+                        + "</td></tr>";
             }
             html += "</table></div>";
             if (infoBox != null) {
@@ -117,7 +121,7 @@ $.ajax({
         $.each(data, function (i, val) {
             var point = new BMap.Point(val["lng"], val["lat"]);
             var marker = new BMap.Marker(point, {icon: myIcon});
-            var lab = new BMap.Label(val["STATIONID"] + "_" + val["alias"], {
+            var lab = new BMap.Label(val["stationid"] + "_" + val["alias"], {
                 offset: new BMap.Size(20, 0)
             });
             // 设置label(标注的样式)

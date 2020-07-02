@@ -6,12 +6,12 @@ import java.util.Date;
 public class StationInfo implements Comparable<StationInfo>{
     @Override
     public int compareTo(StationInfo stationInfo){
-       return (int)this.getSTATIONID().charAt(0)*100+(int)this.getSTATIONID().charAt(1)*10+(int)this.getSTATIONID().charAt(2)*1
-               - (int) stationInfo.getSTATIONID().charAt(0)*100+(int) stationInfo.getSTATIONID().charAt(1)*10+(int) stationInfo.getSTATIONID().charAt(2)*1;
+       return (int)this.getStationid().charAt(0)*100+(int)this.getStationid().charAt(1)*10+(int)this.getStationid().charAt(2)*1
+               - (int) stationInfo.getStationid().charAt(0)*100+(int) stationInfo.getStationid().charAt(1)*10+(int) stationInfo.getStationid().charAt(2)*1;
     }
-    public String STATIONID;
+    public String stationid;
 
-    public Date OBTIME;
+    public Date obtime;
 
     public Date commtime = new Date(0);
 //    public String type;
@@ -63,20 +63,20 @@ public class StationInfo implements Comparable<StationInfo>{
     	this.noRealTime = noRealTime;
     }
     
-    public String getSTATIONID() {
-        return STATIONID;
+    public String getStationid() {
+        return stationid;
     }
 
-    public void setSTATIONID(String STATIONID) {
-        this.STATIONID = STATIONID == null ? null : STATIONID.trim();
+    public void setStationid(String stationid) {
+        this.stationid = stationid == null ? null : stationid.trim();
     }
 
-    public Date getOBTIME() {
-        return OBTIME;
+    public Date getObtime() {
+        return obtime;
     }
 
-    public void setOBTIME(Date OBTIME) {
-        this.OBTIME = OBTIME;
+    public void setObtime(Date obtime) {
+        this.obtime = obtime;
     }
 
 
