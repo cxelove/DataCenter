@@ -59,7 +59,7 @@ public class UpdateBin {
                         resendFrame();
                     } else if (timeOut > 300) {
                         System.out.println("升级超时.");
-                        AppConfig.stationidTostationStatus
+                        AppConfig.stationidTostationInfo
                                 .get(stationId).updateBin = null;
                         timer.cancel();
                     }
@@ -114,7 +114,7 @@ public class UpdateBin {
     public void resendFrame() {
         try {
             if (!finishJob && send_pressed)
-                AppConfig.stationidTostationStatus
+                AppConfig.stationidTostationInfo
                         .get(stationId).ioSession.write(IoBuffer.wrap(currentSendFrame));
         } catch (Exception e) {
             e.printStackTrace();
@@ -138,11 +138,11 @@ public class UpdateBin {
             byte[] sendBuffer = pack(btArr, (byte) (nCount_FileNumber - current_FileNumber), type);
             currentSendFrame = sendBuffer;
             try {
-                AppConfig.stationidTostationStatus
+                AppConfig.stationidTostationInfo
                         .get(stationId).ioSession.write(IoBuffer.wrap(currentSendFrame));
                 if (current_FileNumber < nCount_FileNumber) {
                     current_FileNumber++;
-                    AppConfig.stationidTostationStatus
+                    AppConfig.stationidTostationInfo
                             .get(stationId).webSocketSession.getBasicRemote().sendText("!" + (current_FileNumber * 100.0 / nCount_FileNumber + "%"));
                 } else {
                     current_FileNumber = 1;

@@ -3,28 +3,17 @@ package com.ldchina.datacenter.dao.entity;
 import java.util.Date;
 
 
-public class StationInfo implements Comparable<StationInfo>{
+public class StationState implements Comparable<StationState>{
     @Override
-    public int compareTo(StationInfo stationInfo){
+    public int compareTo(StationState stationState){
        return (int)this.getStationid().charAt(0)*100+(int)this.getStationid().charAt(1)*10+(int)this.getStationid().charAt(2)*1
-               - (int) stationInfo.getStationid().charAt(0)*100+(int) stationInfo.getStationid().charAt(1)*10+(int) stationInfo.getStationid().charAt(2)*1;
+               - (int) stationState.getStationid().charAt(0)*100+(int) stationState.getStationid().charAt(1)*10+(int) stationState.getStationid().charAt(2)*1;
     }
     public String stationid;
 
     public Date obtime;
 
     public Date commtime = new Date(0);
-//    public String type;
-//public String getType() {
-//    return type;
-//}
-//
-//    public char[] getTypes(){return type.toCharArray();}
-//
-//    public void setType(String type) {
-//        this.type = type == null ? null : type.trim();
-//    }
-
 
     public String alias;
 

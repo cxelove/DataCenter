@@ -1,10 +1,9 @@
 package com.ldchina.datacenter.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.ldchina.datacenter.AppConfig;
-import com.ldchina.datacenter.dao.entity.StationInfo;
+import com.ldchina.datacenter.dao.entity.StationState;
 
 import com.ldchina.datacenter.dao.entity.WebConfig;
 import com.ldchina.datacenter.utils.DbUtil;
@@ -22,9 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -40,10 +37,10 @@ public class SMGController {
     public ModelAndView edit(String stationId) {
         if (stationId == null) return null;
         ModelAndView mav = new ModelAndView("smg/edit");
-        String protocol = AppConfig.stationidTostationStatus.get(stationId).stationInfo.protocol;
+        String protocol = AppConfig.stationidTostationInfo.get(stationId).stationState.protocol;
       //  List<Map<String, WebConfig>> retList = new ArrayList<>();
         Map<String, WebConfig> retMap = new HashMap<>();
-        for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.keyToWebconfigByStationid.get(stationId).entrySet()) {
+        for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.stationidTostationInfo.get(stationId).keyToWebconfig.entrySet()) {
             String mainKey = webConfigEntry.getKey().split("_")[1];
             String subKey = webConfigEntry.getKey().split("_")[2];
 
@@ -72,7 +69,7 @@ public class SMGController {
         File[] fileList = file.listFiles();
         mav.addObject("stationid", stationId);
         String s = "";
-        if (AppConfig.stationidTostationStatus
+        if (AppConfig.stationidTostationInfo
                 .get(stationId).ioSession == null) {
             s = s + "[ 站点不在线 ] ";
             mav.addObject("ready", 0);
@@ -99,8 +96,7 @@ public class SMGController {
             DbUtil.dbMapperUtil.iSqlMapper.sqlput("DELETE FROM `qx_latest` WHERE `stationid`='" + stationId + "'");
             DbUtil.dbMapperUtil.iSqlMapper.sqlput("DELETE FROM `qx_station` WHERE `stationid`='" + stationId + "'");
             DbUtil.dbMapperUtil.iSqlMapper.sqlput("DELETE FROM `web_config` WHERE `stationid`='" + stationId + "'");
-            AppConfig.stationidTostationStatus.remove(stationId);
-            AppConfig.keyToWebconfigByStationid.remove(stationId);
+            AppConfig.stationidTostationInfo.remove(stationId);
         }
         return "smg";
     }
@@ -134,8 +130,8 @@ public class SMGController {
      * @return
      */
     @ResponseBody
-    @RequestMapping(value = "/updateStationInfo", method = RequestMethod.POST)
-    public String updateStationInfo() throws Exception {
+    @RequestMapping(value = "/updatestationState", method = RequestMethod.POST)
+    public String updatestationState() throws Exception {
         StringBuffer jb = new StringBuffer();
         String line = null;
         //try {
@@ -143,9 +139,9 @@ public class SMGController {
         while ((line = reader.readLine()) != null)
             jb.append(line);
         JSONObject jsonObject = JSONObject.parseObject(jb.toString());
-        StationInfo stationInfo = JSON.toJavaObject(jsonObject, StationInfo.class);
-        DbUtil.dbMapperUtil.qxStationMapper.updateStationInfoById(stationInfo);
-        AppConfig.stationidTostationStatus.get(stationInfo.stationid).stationInfo = stationInfo;
+        StationState stationState = JSON.toJavaObject(jsonObject, StationState.class);
+        DbUtil.dbMapperUtil.qxStationMapper.updatestationStateById(stationState);
+        AppConfig.stationidTostationInfo.get(stationState.stationid).stationState = stationState;
         return "success";
         //   } catch (Exception ex) { /*report an error*/ }
 

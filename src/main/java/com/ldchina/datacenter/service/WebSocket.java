@@ -59,13 +59,13 @@ public class WebSocket {
         subOnlineCount();           //在线数减1
 
         if (stationId != null) {
-            AppConfig.stationidTostationStatus
+            AppConfig.stationidTostationInfo
                     .get(stationId).webSocketSession = null;
-            if(AppConfig.stationidTostationStatus
+            if(AppConfig.stationidTostationInfo
                     .get(stationId).updateBin != null){
-                AppConfig.stationidTostationStatus
+                AppConfig.stationidTostationInfo
                         .get(stationId).updateBin.cleanUp();
-                AppConfig.stationidTostationStatus
+                AppConfig.stationidTostationInfo
                         .get(stationId).updateBin=null;
             }
         }
@@ -87,9 +87,9 @@ public class WebSocket {
                 case '0':
                     stationId = message.substring(2);
                     try {
-                        if (AppConfig.stationidTostationStatus.get(stationId).ioSession != null) {
+                        if (AppConfig.stationidTostationInfo.get(stationId).ioSession != null) {
                             session.getBasicRemote().sendText("*success");
-                            AppConfig.stationidTostationStatus.get(stationId).webSocketSession = session;
+                            AppConfig.stationidTostationInfo.get(stationId).webSocketSession = session;
                             //sessionUnion = MinaTcpServerHandler.sessionsMap.get(stationId);
                         } else {
                             session.getBasicRemote().sendText("*fail");
@@ -103,8 +103,8 @@ public class WebSocket {
             }
         } else {
             if (stationId != null) {
-                if (AppConfig.stationidTostationStatus.get(stationId).ioSession != null) {
-                AppConfig.stationidTostationStatus.get(stationId).ioSession.write(message);
+                if (AppConfig.stationidTostationInfo.get(stationId).ioSession != null) {
+                AppConfig.stationidTostationInfo.get(stationId).ioSession.write(message);
                     log.info("SendToClient: " + stationId + ": " + message);
                 }
             }

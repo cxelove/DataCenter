@@ -41,15 +41,15 @@ public class Layui extends HashMap<String, Object> {
                 ",{field: 'OBTIME', width: 150, title: '时间',templet: function(d){if( d['OBTIME']== 0) return '---'; return (new Date(d['OBTIME'])).Format('yyyy-MM-dd hh:mm');  }}" +
                 ",";
 
-        for(Map.Entry<String,Map<String, WebConfig>> stationidToWebConfig:AppConfig.keyToWebconfigByStationid.entrySet()){
-            if(stationidToListcols.get(stationidToWebConfig.getKey()) == null){
+        for(Map.Entry<String,StationInfo> stationInfo:AppConfig.stationidTostationInfo.entrySet()){
+            if(stationidToListcols.get(stationInfo.getKey()) == null){
                     String colString = tmpcols;
-                    for (Map.Entry<String, WebConfig> webConfigEntry : stationidToWebConfig.getValue().entrySet()) {
+                    for (Map.Entry<String, WebConfig> webConfigEntry : stationInfo.getValue().keyToWebconfig.entrySet()) {
                         String mainKey = webConfigEntry.getKey().split("_")[1];
                         String subKey = webConfigEntry.getKey().split("_")[2];
                         try{
                             ChannelInfo channelInfo = AppConfig.keyMainSubToChannelInfoByProtocol
-                                    .get(AppConfig.stationidTostationStatus.get(stationidToWebConfig.getKey()).stationInfo.protocol)
+                                    .get(stationInfo.getValue().stationState.protocol)
                                     .get(mainKey)
                                     .get(subKey);
                             if (channelInfo.unit == null || channelInfo.unit.equals("")) {
@@ -64,7 +64,7 @@ public class Layui extends HashMap<String, Object> {
                         }
                     }
                     colString += "{field: 'PS', title: '电压(V)'}]]";
-                    stationidToListcols.put(stationidToWebConfig.getKey(), colString);
+                    stationidToListcols.put(stationInfo.getKey(), colString);
 
             }
         }

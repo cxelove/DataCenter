@@ -18,8 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.ByteArrayOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +32,7 @@ public class ExportController {
         mav.addObject("cols", Layui.getListColsByStationid(stationid));
         mav.addObject("stationid", stationid);
         mav.addObject("date", TimeUtil.format(new Date(Long.parseLong(date)), "yyyy-MM-dd"));
-        mav.addObject("alias",AppConfig.stationidTostationStatus.get(stationid).stationInfo.alias);
+        mav.addObject("alias",AppConfig.stationidTostationInfo.get(stationid).stationState.alias);
 
         // mav.addObject("cols", com.ldchina.datacenter.types.Layui.getListCols(AppConfig.webconfigs));
         return mav;
@@ -93,11 +91,11 @@ public class ExportController {
                     sheet.autoSizeColumn((short) 1);
                 }
                 int cell = 2;
-                for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.keyToWebconfigByStationid.get(stationId).entrySet()) {
+                for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.stationidTostationInfo.get(stationId).keyToWebconfig.entrySet()) {
                     String mainKey = webConfigEntry.getKey().split("_")[1];
                     String subKey = webConfigEntry.getKey().split("_")[2];
                     ChannelInfo channelInfo = AppConfig.keyMainSubToChannelInfoByProtocol
-                            .get(AppConfig.stationidTostationStatus.get(stationId).stationInfo.protocol)
+                            .get(AppConfig.stationidTostationInfo.get(stationId).stationState.protocol)
                             .get(mainKey)
                             .get(subKey);
                     if (channelInfo.unit == null) {
@@ -123,7 +121,7 @@ public class ExportController {
         }catch (Exception ex) {
             ex.printStackTrace();
         }
-        String filename = stationId + "_" + AppConfig.stationidTostationStatus.get(stationId).stationInfo.alias + "_" + date + ".xls";
+        String filename = stationId + "_" + AppConfig.stationidTostationInfo.get(stationId).stationState.alias + "_" + date + ".xls";
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "attachment;filename=" + filename);
         return new ResponseEntity<byte[]>(baos.toByteArray(), headers, HttpStatus.CREATED);

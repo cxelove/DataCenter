@@ -1,10 +1,9 @@
 package com.ldchina.datacenter.spring;
 
 import com.ldchina.datacenter.AppConfig;
-import com.ldchina.datacenter.types.StationStatus;
+import com.ldchina.datacenter.types.StationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
@@ -36,8 +35,8 @@ public class ScheduledTasks implements SchedulingConfigurer {
     public void setStationTime(){
         log.info("Synchronization time");
         String cmd = "TIME " + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())+"\r\n";
-        for (Map.Entry<String, StationStatus> entry : AppConfig.stationidTostationStatus.entrySet()) {
-            if(entry.getValue().stationInfo.protocol.equals("LMD-S4")){
+        for (Map.Entry<String, StationInfo> entry : AppConfig.stationidTostationInfo.entrySet()) {
+            if(entry.getValue().stationState.protocol.equals("LMD-S4")){
                 if(entry.getValue().ioSession!=null){
                     entry.getValue().ioSession.write(cmd);
                 }

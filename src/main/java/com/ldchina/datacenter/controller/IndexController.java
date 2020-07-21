@@ -2,7 +2,7 @@ package com.ldchina.datacenter.controller;
 
 import java.util.List;
 
-import com.ldchina.datacenter.dao.entity.StationInfo;
+import com.ldchina.datacenter.dao.entity.StationState;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,9 +14,9 @@ import com.ldchina.datacenter.utils.DbUtil;
 public class IndexController {
     @RequestMapping("/")
     public ModelAndView index(Model model) {
-    	List<StationInfo> stationInfos = DbUtil.dbMapperUtil.qxStationMapper.getAllStations();
+    	List<StationState> stationStates = DbUtil.dbMapperUtil.qxStationMapper.getAllStations();
         ModelAndView mav = new ModelAndView("index");
-        mav.addObject("stations", stationInfos);
+        mav.addObject("stations", stationStates);
         mav.addObject("webTitle",AppConfig.appConfig.webTitle);
         return mav;
     }
@@ -35,7 +35,7 @@ public class IndexController {
     @RequestMapping("/detail")
     public ModelAndView detial(String stationid){
         ModelAndView mav = new ModelAndView("x");
-        mav.addObject("stationInfo", AppConfig.stationidTostationStatus.get(stationid).stationInfo);
+        mav.addObject("stationState", AppConfig.stationidTostationInfo.get(stationid).stationState);
         return mav;
     }
 }

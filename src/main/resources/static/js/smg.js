@@ -77,7 +77,7 @@ layui.use(['table', 'layer', 'element'], function () {
         var value = obj.value //得到修改后的值
             , data = obj.data //得到所在行所有键值
             , field = obj.field; //得到字段
-        $.post("../smg/updateStationInfo", JSON.stringify(data), function (result) {
+        $.post("../smg/updatestationState", JSON.stringify(data), function (result) {
         });
     });
     table.on('rowDouble(list)', function (obj) {

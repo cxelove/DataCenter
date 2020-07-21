@@ -81,21 +81,21 @@ public class ProcThread implements Runnable {
          */
                 String msg = (String) buff;
                 if (ioSessionToStationId.get(ioSession) != null &&
-                        AppConfig.stationidTostationStatus
+                        AppConfig.stationidTostationInfo
                                 .get(ioSessionToStationId.get(ioSession)).webSocketSession != null) {
                     try {
-                        AppConfig.stationidTostationStatus
+                        AppConfig.stationidTostationInfo
                                 .get(ioSessionToStationId.get(ioSession)).webSocketSession.getBasicRemote().sendText(msg);
                     } catch (IOException ex) {
                         log.error("Sent To WebSocket Failed:", ex);
                     }
                 }
                 if (msg.contains("<F>") || msg.contains("<N>") || msg.contains("/////")) {
-                    DbUtil.dbMapperUtil.qxReuploadMapper.delete(stationId, AppConfig.stationidTostationStatus.get(stationId)._Runtime_LastReuploadTime);
+                    DbUtil.dbMapperUtil.qxReuploadMapper.delete(stationId, AppConfig.stationidTostationInfo.get(stationId)._Runtime_LastReuploadTime);
                     doReupload(stationId);
                     return;
                 }
-                if(msg.length()>8){
+                if (msg.length() > 8) {
                     if ((msg.charAt(0) == '#' && msg.charAt(4) == ',' && msg.charAt(7) == ',')) {
                         PROC_LMDS4_Data(msg);
                         doReupload(stationId);
@@ -124,9 +124,9 @@ public class ProcThread implements Runnable {
         rep[15] = 0x7b;
         ioSession.write(IoBuffer.wrap(rep));
         if (ioSessionToStationId.get(ioSession) != null) {
-            AppConfig.stationidTostationStatus
+            AppConfig.stationidTostationInfo
                     .get(ioSessionToStationId.get(ioSession))
-                    .stationInfo.commtime = new Date();
+                    .stationState.commtime = new Date();
         }
     }
 
@@ -159,7 +159,7 @@ public class ProcThread implements Runnable {
             return;
         }
 
-        Set keySet = AppConfig.keyToWebconfigByStationid.get(dataInfo.stationid).keySet();
+        Set keySet = AppConfig.stationidTostationInfo.get(dataInfo.stationid).keyToWebconfig.keySet();
 
         switch (lufftCommonCmd.cmd) {
             case LufftCommonCmd.Cmd_MinUpload:
@@ -222,7 +222,7 @@ public class ProcThread implements Runnable {
                 log.info(logString);
                 procStationStatus(dataInfo.stationid, ioSession);
                 insertData(dataInfo);
-                if (AppConfig.stationidTostationStatus.get(dataInfo.stationid).dataInfo.obtime.before(dataInfo.obtime)) {
+                if (AppConfig.stationidTostationInfo.get(dataInfo.stationid).dataInfo.obtime.before(dataInfo.obtime)) {
                     insertLatestData(dataInfo);
                 }
                 break;
@@ -259,35 +259,39 @@ public class ProcThread implements Runnable {
             dataInfo.stationid = ss[0].substring(1);
             stationId = dataInfo.stationid;
             if (StatusNo.OK != checkStationId(dataInfo.stationid)) {
-                log.warn("未知站点号：" + dataInfo.stationid);
+                log.warn("未知站点号:" + dataInfo.stationid);
                 return;
             }
-            String logString = "站点：" + dataInfo.stationid + ";";
+            String logString = "站点:" + dataInfo.stationid + ";";
             dataInfo.obtime = TimeUtil.parseDate(ss[2], "yyyyMMddHHmm");
-            logString += "时间：" + ss[2] + ";";
+            logString += "时间:" + ss[2] + ";";
             for (int i = 0; i < ss[3].length(); i++) { // 根据报文内传感器类型字段确定有多少种传感器
                 String mainKey = String.valueOf(ss[3].charAt(i));
+
                 Map<String, ChannelInfo> subKeyToChannel = AppConfig.keyMainSubToChannelInfoByProtocol
                         .get("LMD-S4")
                         .get(mainKey);
                 if (null != subKeyToChannel) {
                     Set subKeys = subKeyToChannel.keySet();
-                    for (int j = 0; j < subKeys.size(); i++) {
+                    for (int j = 0; j < subKeys.size(); j++) {
                         if (subKeys.contains(ss[posion])) {
                             ChannelInfo channelInfo = subKeyToChannel.get(ss[posion]);
                             String sqlK = "_" + mainKey + "_" + ss[posion];
-                            String sqlV = null;
+                            if (AppConfig.stationidTostationInfo.get(dataInfo.stationid)
+                                    .keyToWebconfig.keySet().contains(sqlK)) {
+                                String sqlV = null;
 
-                            if (channelInfo.mapcode != null) {
-                                sqlV = channelInfo.mapcode.get(ss[posion + 1]);
-                                if (sqlV == null) {
+                                if (channelInfo.mapcode != null) {
+                                    sqlV = channelInfo.mapcode.get(ss[posion + 1]);
+                                    if (sqlV == null) {
+                                        sqlV = ss[posion + 1];
+                                    }
+                                } else {
                                     sqlV = ss[posion + 1];
                                 }
-                            } else {
-                                sqlV = ss[posion + 1];
+                                logString += channelInfo.name + ":" + sqlV + ";";
+                                dataInfo.val.put(sqlK, sqlV);
                             }
-                            logString += channelInfo.name + ":" + sqlV + ";";
-                            dataInfo.val.put(sqlK, sqlV);
                             posion += 2;
                         } else {
                             break;
@@ -302,10 +306,10 @@ public class ProcThread implements Runnable {
             log.info(logString);
             procStationStatus(dataInfo.stationid, ioSession);
             insertData(dataInfo);
-            long diff = 1; //默认为正常报文（新建站点时，stationInfo.obtime ==null）
-            long dateOld=0;
-            if(AppConfig.stationidTostationStatus.get(dataInfo.stationid).stationInfo.obtime != null) {
-                dateOld = AppConfig.stationidTostationStatus.get(dataInfo.stationid).stationInfo.obtime.getTime();
+            long diff = 1; //默认为正常报文（新建站点时，stationState.obtime ==null）
+            long dateOld = 0;
+            if (AppConfig.stationidTostationInfo.get(dataInfo.stationid).stationState.obtime != null) {
+                dateOld = AppConfig.stationidTostationInfo.get(dataInfo.stationid).stationState.obtime.getTime();
                 diff = (dataInfo.obtime.getTime() - dateOld) / 1000 / 60;
             }
             if (diff < 0) {
@@ -337,34 +341,34 @@ public class ProcThread implements Runnable {
         if (stationId == null) return;
         Date reuploadDateTime = DbUtil.dbMapperUtil.qxReuploadMapper.getReupload(stationId);
         if (reuploadDateTime != null) {
-            if (AppConfig.stationidTostationStatus.get(stationId)._Runtime_LastReuploadTime.equals(reuploadDateTime)) {
-                AppConfig.stationidTostationStatus.get(stationId)._Runtime_ReuploadTryTimes++;
+            if (AppConfig.stationidTostationInfo.get(stationId)._Runtime_LastReuploadTime.equals(reuploadDateTime)) {
+                AppConfig.stationidTostationInfo.get(stationId)._Runtime_ReuploadTryTimes++;
             } else {
-                AppConfig.stationidTostationStatus.get(stationId)._Runtime_ReuploadTryTimes = 1;
+                AppConfig.stationidTostationInfo.get(stationId)._Runtime_ReuploadTryTimes = 1;
             }
-            if (AppConfig.stationidTostationStatus.get(stationId)._Runtime_ReuploadTryTimes > 2) {
-                DbUtil.dbMapperUtil.qxReuploadMapper.delete(stationId, AppConfig.stationidTostationStatus.get(stationId)._Runtime_LastReuploadTime);
-                AppConfig.stationidTostationStatus.get(stationId)._Runtime_ReuploadTryTimes = 0;
+            if (AppConfig.stationidTostationInfo.get(stationId)._Runtime_ReuploadTryTimes > 2) {
+                DbUtil.dbMapperUtil.qxReuploadMapper.delete(stationId, AppConfig.stationidTostationInfo.get(stationId)._Runtime_LastReuploadTime);
+                AppConfig.stationidTostationInfo.get(stationId)._Runtime_ReuploadTryTimes = 0;
             } else {
                 // LocalDateTime.
-                AppConfig.stationidTostationStatus.get(stationId)._Runtime_LastReuploadTime = new Date(reuploadDateTime.getTime());
-                String cmd = "DOWN " + TimeUtil.format(AppConfig.stationidTostationStatus.get(stationId)._Runtime_LastReuploadTime, "yyyyMMddHHmm") + " 1";
+                AppConfig.stationidTostationInfo.get(stationId)._Runtime_LastReuploadTime = new Date(reuploadDateTime.getTime());
+                String cmd = "DOWN " + TimeUtil.format(AppConfig.stationidTostationInfo.get(stationId)._Runtime_LastReuploadTime, "yyyyMMddHHmm") + " 1";
                 log.info("Send Cmd To [" + stationId + "]: " + cmd);
-                AppConfig.stationidTostationStatus.get(stationId).ioSession.write(cmd);
+                AppConfig.stationidTostationInfo.get(stationId).ioSession.write(cmd);
             }
         }
     }
 
     StatusNo checkStationId(String stationid) {
-        if (!AppConfig.keyToWebconfigByStationid.keySet().contains(stationid)) {
+        if (!AppConfig.stationidTostationInfo.keySet().contains(stationid)) {
             return StatusNo.未知站点号;
         }
         return StatusNo.OK;
     }
 
     void procStationStatus(String stationid, IoSession ioSession) {
-        AppConfig.stationidTostationStatus.get(stationid).stationInfo.commtime = new Date();
-        AppConfig.stationidTostationStatus.get(stationid).ioSession = ioSession;
+        AppConfig.stationidTostationInfo.get(stationid).stationState.commtime = new Date();
+        AppConfig.stationidTostationInfo.get(stationid).ioSession = ioSession;
         ioSessionToStationId.put(ioSession, stationid);
     }
 
@@ -388,8 +392,8 @@ public class ProcThread implements Runnable {
      * @return
      */
     StatusNo insertLatestData(DataInfo dataInfo) {
-        AppConfig.stationidTostationStatus.get(dataInfo.stationid).dataInfo = dataInfo;
-        AppConfig.stationidTostationStatus.get(dataInfo.stationid).stationInfo.obtime = dataInfo.obtime;
+        AppConfig.stationidTostationInfo.get(dataInfo.stationid).dataInfo = dataInfo;
+        AppConfig.stationidTostationInfo.get(dataInfo.stationid).stationState.obtime = dataInfo.obtime;
         String sqlString = "MERGE INTO QX_LATEST ( `stationid`, `obtime`,`ps`, `data`) VALUES ( '" + dataInfo.stationid
                 + "', '" + TimeUtil.format(dataInfo.obtime, "yyyy-MM-dd HH:mm:00") + "', '" + dataInfo.PS + "', '"
                 + JSON.toJSONString(dataInfo.val) + "')";

@@ -1,6 +1,6 @@
 package com.ldchina.datacenter.controller;
 
-import com.ldchina.datacenter.types.StationStatus;
+import com.ldchina.datacenter.types.StationInfo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -24,17 +24,17 @@ public class ListController {
     public Map getListTable(){
         Map<String, String> ret = new LinkedHashMap<>();
 
-        List<Map.Entry<String, StationStatus>> list = new ArrayList<Map.Entry<String, StationStatus>>(AppConfig.stationidTostationStatus.entrySet());
+        List<Map.Entry<String, StationInfo>> list = new ArrayList<Map.Entry<String, StationInfo>>(AppConfig.stationidTostationInfo.entrySet());
 
-        Collections.sort(list,new Comparator<Map.Entry<String, StationStatus>>() {
+        Collections.sort(list,new Comparator<Map.Entry<String, StationInfo>>() {
             //升序排序
-            public int compare(Map.Entry<String, StationStatus> o1, Map.Entry<String, StationStatus> o2) {
-                return o1.getValue().stationInfo.protocol.compareTo(o2.getValue().stationInfo.protocol);
+            public int compare(Map.Entry<String, StationInfo> o1, Map.Entry<String, StationInfo> o2) {
+                return o1.getValue().stationState.protocol.compareTo(o2.getValue().stationState.protocol);
             }
         });
-        for (Map.Entry<String, StationStatus> e: list) {
-            if(ret.get(e.getValue().stationInfo.measure)==null){
-                ret.put(e.getValue().stationInfo.measure, Layui.getListColsByStationid(e.getValue().stationInfo.stationid));
+        for (Map.Entry<String, StationInfo> e: list) {
+            if(ret.get(e.getValue().stationState.measure)==null){
+                ret.put(e.getValue().stationState.measure, Layui.getListColsByStationid(e.getValue().stationState.stationid));
             }
         }
         return  ret;

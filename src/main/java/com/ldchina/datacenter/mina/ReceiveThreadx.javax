@@ -1,6 +1,6 @@
 package com.ldchina.datacenter.mina;
 
-import com.ldchina.datacenter.dao.entity.StationInfo;
+import com.ldchina.datacenter.dao.entity.stationState;
 import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import com.alibaba.fastjson.JSON;
 import com.ldchina.datacenter.service.WebSocket;
 import com.ldchina.datacenter.types.DataInfo;
-import com.ldchina.datacenter.types.StationStatus;
+import com.ldchina.datacenter.types.StationInfo;
 import com.ldchina.datacenter.types.StatusNo;
 import com.ldchina.datacenter.utils.DbUtil;
 import com.ldchina.datacenter.utils.TimeUtil;
@@ -45,18 +45,18 @@ public class ReceiveThread extends Thread {
 	private static Timer timer = new Timer();
 	static {
 		List<DataInfo> list = DbUtil.dbMapperUtil.latestDataMapper.getLatestDataAll();
-		List<StationInfo> stationInfos = DbUtil.dbMapperUtil.qxStationMapper.getAllStations();
+		List<stationState> stationStates = DbUtil.dbMapperUtil.qxStationMapper.getAllStations();
 		if (list != null) {
 			list.forEach(lst -> {
-				StationStatus stationStatus = new StationStatus(lst);
-				for (int j = 0; j < stationInfos.size(); j++) {
-					if (lst.stationId.equals(stationInfos.get(j).getStationid())) {
-						stationStatus.stationInfo = stationInfos.get(j);
-						stationInfos.remove(j);
+				StationStatus stationInfo = new StationStatus(lst);
+				for (int j = 0; j < stationStates.size(); j++) {
+					if (lst.stationId.equals(stationStates.get(j).getStationid())) {
+						stationInfo.stationState = stationStates.get(j);
+						stationStates.remove(j);
 						break;
 					}
 				}
-				stationStatusMap.put(lst.stationId, stationStatus);
+				stationStatusMap.put(lst.stationId, stationInfo);
 			});
 		}
 		/**
@@ -109,7 +109,7 @@ public class ReceiveThread extends Thread {
 						StatusNo statusNo = msgPraser(msg, dataInfo, typebuff);
 						//这个处理采集器时钟失效的情况，用收到报文的时间来替代
 						try {
-							if(stationStatusMap.get(dataInfo.stationId) != null && stationStatusMap.get(stationId).stationInfo.noRealTime) {
+							if(stationStatusMap.get(dataInfo.stationId) != null && stationStatusMap.get(stationId).stationState.noRealTime) {
 							dataInfo.obTime = new Date();
 							//System.out.print(new Date().toString());
 							}
@@ -168,12 +168,12 @@ public class ReceiveThread extends Thread {
 	 * @param dataInfo
 	 * @return
 	 */
-	StatusNo insertLatestData(DataInfo dataInfo, StationInfo stationInfo) {
-		if (stationInfo == null) {
+	StatusNo insertLatestData(DataInfo dataInfo, StationState stationState) {
+		if (stationState == null) {
 			stationStatusMap.get(dataInfo.stationId).dataInfo = dataInfo.clone();
 		} else {
-			DbUtil.dbMapperUtil.qxStationMapper.saveStationInfo(stationInfo);
-			stationStatusMap.put(dataInfo.stationId, new StationStatus(dataInfo, stationInfo));
+			DbUtil.dbMapperUtil.qxStationMapper.savestationState(stationState);
+			stationStatusMap.put(dataInfo.stationId, new StationStatus(dataInfo, stationState));
 		}
 		String sqlString = "MERGE INTO QX_LATEST ( `stationid`, `obtime`,`ps`, `data`) VALUES ( '" + dataInfo.stationId
 				+ "', '" + TimeUtil.format(dataInfo.obTime, "yyyy-MM-dd HH:mm:00") + "', '" + dataInfo.ps + "', '"
@@ -267,14 +267,14 @@ public class ReceiveThread extends Thread {
 				sqlTableString += ")";
 
 				dbMapperUtil.iSqlMapper.sqlput(sqlTableString);
-				StationInfo stationInfo = new StationInfo();
-				stationInfo.stationid = stationId;
-				stationInfo.obtime = dataInfo.obTime;
-//				stationInfo.type = typebuff.toString();
+				stationState stationState = new stationState();
+				stationState.stationid = stationId;
+				stationState.obtime = dataInfo.obTime;
+//				stationState.type = typebuff.toString();
 				
 				insertData(dataInfo);
 			
-				insertLatestData(dataInfo, stationInfo);
+				insertLatestData(dataInfo, stationState);
 				
 				dbMapperUtil.iSqlMapper.sqlput(sqlConfigString);
 				// serv_support_sensor
@@ -361,8 +361,8 @@ public class ReceiveThread extends Thread {
 //						String sqlK = "_" + sensorKey + ss[posion];
 //						if (Arrays.asList(measurements[j].key).contains(sqlK)) {
 //							String sqlV = null;
-//							StationStatus stationStatus = stationStatusMap.get(stationId);
-//							if (stationStatus==null || stationStatus.stationInfo.type.contains(sensorKey.toString())) {
+//							StationStatus stationInfo = stationStatusMap.get(stationId);
+//							if (stationInfo==null || stationInfo.stationState.type.contains(sensorKey.toString())) {
 //								// 处理手动设置那些没有配置的传感器，部分站点虽然报文有N但是可能没有安装。
 //								sqlV = ss[posion + 1];
 //								if (!"?/".contains(sqlV)) {

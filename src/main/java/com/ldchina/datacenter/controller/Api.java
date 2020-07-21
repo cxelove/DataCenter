@@ -2,13 +2,13 @@ package com.ldchina.datacenter.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ldchina.datacenter.AppConfig;
-import com.ldchina.datacenter.dao.entity.StationInfo;
+import com.ldchina.datacenter.dao.entity.StationState;
 import com.ldchina.datacenter.dao.entity.WebConfig;
 import com.ldchina.datacenter.mina.UpdateBin;
 import com.ldchina.datacenter.sensor.ChannelInfo;
 import com.ldchina.datacenter.types.DataInfo;
 import com.ldchina.datacenter.types.Layui;
-import com.ldchina.datacenter.types.StationStatus;
+import com.ldchina.datacenter.types.StationInfo;
 import com.ldchina.datacenter.utils.DbUtil;
 import com.ldchina.datacenter.utils.TimeUtil;
 
@@ -36,8 +36,8 @@ public class Api {
     @ResponseBody
     @RequestMapping(value = "/getStations")
     public Layui getStations() {
-        List<StationInfo> stationInfos = DbUtil.dbMapperUtil.qxStationMapper.getAllStations();
-        return Layui.data(null, stationInfos.size(), stationInfos);
+        List<StationState> stationStates = DbUtil.dbMapperUtil.qxStationMapper.getAllStations();
+        return Layui.data(null, stationStates.size(), stationStates);
     }
 
     /**
@@ -47,10 +47,10 @@ public class Api {
      */
     @ResponseBody
     @RequestMapping("/getMapLng")
-    public List<StationInfo> getMapLng() {
-        List<StationInfo> list = new ArrayList();
-        for (Map.Entry<String, StationStatus> entry : AppConfig.stationidTostationStatus.entrySet()) {
-            StationInfo x = entry.getValue().stationInfo;
+    public List<StationState> getMapLng() {
+        List<StationState> list = new ArrayList();
+        for (Map.Entry<String, StationInfo> entry : AppConfig.stationidTostationInfo.entrySet()) {
+            StationState x = entry.getValue().stationState;
             if (x == null || x.getLat() == null || x.getLng() == null) {
                 continue;
             } else {
@@ -71,10 +71,10 @@ public class Api {
         if (stationId == null)
             return null;
         Map<String, Object> map = new HashMap<>();
-        map.put("data", AppConfig.stationidTostationStatus.get(stationId).dataInfo);
+        map.put("data", AppConfig.stationidTostationInfo.get(stationId).dataInfo);
         List<ChannelInfo> list = new ArrayList<>();
-        String protocol = AppConfig.stationidTostationStatus.get(stationId).stationInfo.protocol;
-        for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.keyToWebconfigByStationid.get(stationId).entrySet()) {
+        String protocol = AppConfig.stationidTostationInfo.get(stationId).stationState.protocol;
+        for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.stationidTostationInfo.get(stationId).keyToWebconfig.entrySet()) {
             String mainId = webConfigEntry.getKey().split("_")[1];
             String subId = webConfigEntry.getKey().split("_")[2];
             if (webConfigEntry.getValue().mapDisplay) {
@@ -95,12 +95,12 @@ public class Api {
         String sql = "";
         Map<String, WebConfig> retMap = new HashMap<>();
         try {
-            for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.keyToWebconfigByStationid.get(stationId).entrySet()) {
+            for (Map.Entry<String, WebConfig> webConfigEntry : AppConfig.stationidTostationInfo.get(stationId).keyToWebconfig.entrySet()) {
                 if (valKeySet.contains(webConfigEntry.getKey())) {
-                    AppConfig.keyToWebconfigByStationid.get(stationId).get(webConfigEntry.getKey()).mapDisplay = true;
+                    AppConfig.stationidTostationInfo.get(stationId).keyToWebconfig.get(webConfigEntry.getKey()).mapDisplay = true;
                     sql = "UPDATE `web_config` SET `mapdisplay` = true WHERE `key`='" + webConfigEntry.getKey() + "' AND `stationid` = '" + stationId + "'";
                 } else {
-                    AppConfig.keyToWebconfigByStationid.get(stationId).get(webConfigEntry.getKey()).mapDisplay = false;
+                    AppConfig.stationidTostationInfo.get(stationId).keyToWebconfig.get(webConfigEntry.getKey()).mapDisplay = false;
                     sql = "UPDATE `web_config` SET `mapdisplay` = false WHERE `key`='" + webConfigEntry.getKey() + "' AND `stationid` = '" + stationId + "'";
                 }
                 DbUtil.dbMapperUtil.iSqlMapper.sqlput(sql);
@@ -119,7 +119,7 @@ public class Api {
     @RequestMapping("/getSta")
     public Map<String, String> getSta() {
         Map<String, String> map = new HashMap<String, String>();
-        for (Map.Entry<String, StationStatus> entry : AppConfig.stationidTostationStatus.entrySet()) {
+        for (Map.Entry<String, StationInfo> entry : AppConfig.stationidTostationInfo.entrySet()) {
             map.put(entry.getKey(), (entry.getValue().ioSession == null) ? "STATION_OFFLINE" : "STATION_ONLINE");
         }
         return map;
@@ -154,18 +154,18 @@ public class Api {
     public Map<String, String> updateBin(String stationId, HttpServletRequest request) {
         Map<String, String> map = new HashMap<>();
         // Sessions sessions = MinaTcpServerHandler.sessionsMap.get(stationId);
-        if (AppConfig.stationidTostationStatus
+        if (AppConfig.stationidTostationInfo
                 .get(stationId).ioSession != null) {
-            if (AppConfig.stationidTostationStatus
+            if (AppConfig.stationidTostationInfo
                     .get(stationId).updateBin != null) {
                 map.put("msg", "站点忙");
             } else {
                 String path = new ApplicationHome(getClass()).getSource().getParentFile().toString() + "\\upload\\bin";
-                AppConfig.stationidTostationStatus
+                AppConfig.stationidTostationInfo
                         .get(stationId).updateBin = new UpdateBin();
-                AppConfig.stationidTostationStatus
+                AppConfig.stationidTostationInfo
                         .get(stationId).updateBin.openUpdate(stationId, path);
-                AppConfig.stationidTostationStatus
+                AppConfig.stationidTostationInfo
                         .get(stationId).updateBin.start();
                 map.put("msg", "0");
             }
@@ -184,8 +184,8 @@ public class Api {
     @RequestMapping("/getAllLatest")
     public Layui getAllLatestByMeasure(String measure) {
         List<Map<String, Object>> listsList = new ArrayList<Map<String, Object>>();
-        for (Map.Entry<String, StationStatus> entry : AppConfig.stationidTostationStatus.entrySet()) {
-            if (!entry.getValue().stationInfo.measure.equals(measure)) continue;
+        for (Map.Entry<String, StationInfo> entry : AppConfig.stationidTostationInfo.entrySet()) {
+            if (!entry.getValue().stationState.measure.equals(measure)) continue;
             Map<String, Object> map = new HashMap<String, Object>();
             DataInfo dataInfo = entry.getValue().dataInfo;
             map.put("STATIONID", dataInfo.stationid);
@@ -241,18 +241,18 @@ public class Api {
 
             if (full > 0) {
                 List<String> list = new ArrayList<>();
-                List<Map.Entry<String, StationStatus>> mapList = new ArrayList<Map.Entry<String, StationStatus>>(AppConfig.stationidTostationStatus.entrySet());
-                Collections.sort(mapList, new Comparator<Map.Entry<String, StationStatus>>() {
-                    public int compare(Map.Entry<String, StationStatus> status1, Map.Entry<String, StationStatus> status2) {
+                List<Map.Entry<String, StationInfo>> mapList = new ArrayList<Map.Entry<String, StationInfo>>(AppConfig.stationidTostationInfo.entrySet());
+                Collections.sort(mapList, new Comparator<Map.Entry<String, StationInfo>>() {
+                    public int compare(Map.Entry<String, StationInfo> status1, Map.Entry<String, StationInfo> status2) {
                         //降序排列
-                        return status1.getValue().stationInfo.protocol.compareTo(status2.getValue().stationInfo.protocol);
+                        return status1.getValue().stationState.protocol.compareTo(status2.getValue().stationState.protocol);
                     }
                 });
                 for(int i=0;i<mapList.size();i++){
                     DataInfo dataInfo = mapList.get(i).getValue().dataInfo;
                     if (DbUtil.dbMapperUtil.iSqlMapper.isTableExit("DATA_" + dataInfo.stationid)) {
                         ReportData reportData = new ReportData(dataInfo.stationid,
-                                AppConfig.stationidTostationStatus.get(dataInfo.stationid).stationInfo.getAlias());
+                                AppConfig.stationidTostationInfo.get(dataInfo.stationid).stationState.getAlias());
 
                         String sqlString = "SELECT COUNT(*) FROM DATA_" + dataInfo.stationid
                                 + " WHERE obtime < DATEADD(dd,1,'" + endTime + "') AND obTime >= '" + startTime + "'";

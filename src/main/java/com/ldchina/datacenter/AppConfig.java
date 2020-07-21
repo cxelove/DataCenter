@@ -3,7 +3,7 @@ package com.ldchina.datacenter;
 import javax.annotation.PostConstruct;
 
 
-import com.ldchina.datacenter.dao.entity.StationInfo;
+import com.ldchina.datacenter.dao.entity.StationState;
 import com.ldchina.datacenter.sensor.ChannelInfo;
 import com.ldchina.datacenter.types.*;
 import org.slf4j.Logger;
@@ -29,13 +29,13 @@ public class AppConfig {
      */
     public static Map<String, Map<String, Map<String, ChannelInfo>>> keyMainSubToChannelInfoByProtocol = new HashMap<>();
     /**
-     * 加载所有数据库站点
+     * 根据站点号获取的站点信息、配置等
      */
-    public static Map<String, StationStatus> stationidTostationStatus = new HashMap<>();
+    public static Map<String, StationInfo> stationidTostationInfo = new HashMap<>();
     /**
      * 根据站点号获取对应站点的所有显示配置
      */
-    public static Map<String, Map<String, WebConfig>> keyToWebconfigByStationid = new HashMap<>();
+   // public static Map<String, Map<String, WebConfig>> keyToWebconfigByStationid = new HashMap<>();
 
     private final static Logger log = LoggerFactory.getLogger(AppConfig.class);
     /**
@@ -55,22 +55,21 @@ public class AppConfig {
 
     static {
         List<DataInfo> list = DbUtil.dbMapperUtil.latestDataMapper.getLatestDataAll();
-        List<StationInfo> stationInfos = DbUtil.dbMapperUtil.qxStationMapper.getAllStations();
-        if (stationInfos != null) {
-            stationInfos.forEach(stationInfo -> {
-                StationStatus stationStatus = new StationStatus(null, stationInfo);
+        List<StationState> stationStates = DbUtil.dbMapperUtil.qxStationMapper.getAllStations();
+        if (stationStates != null) {
+            stationStates.forEach(stationState -> {
+                StationInfo stationInfo = new StationInfo(null, stationState);
                 for (int j = 0; j < list.size(); j++) {
-                    if (stationInfo.getStationid().equals(list.get(j).stationid)) {
-                        stationStatus.dataInfo = list.get(j);
-                     //   System.out.println("初始化缓存【" + stationStatus.stationInfo.alias + "】更新时间【" + stationStatus.stationInfo.obtime + "】");
-                        list.remove(j);
+                    if (stationState.getStationid().equals(list.get(j).stationid)) {
+                        stationInfo.dataInfo = list.get(j);
+                      list.remove(j);
                         break;
                     }
                 }
-                if (stationStatus.dataInfo == null) {
-                    stationStatus.dataInfo = new DataInfo(stationInfo.getStationid());
+                if (stationInfo.dataInfo == null) {
+                    stationInfo.dataInfo = new DataInfo(stationState.getStationid());
                 }
-                stationidTostationStatus.put(stationInfo.getStationid(), stationStatus);
+                stationidTostationInfo.put(stationState.getStationid(), stationInfo);
             });
         }
         /**
@@ -83,8 +82,8 @@ public class AppConfig {
             @Override
             public void run() {
                 long ms = new Date().getTime();
-                for (Map.Entry<String, StationStatus> entry : stationidTostationStatus.entrySet()) {
-                    if (Math.abs((entry.getValue().stationInfo.commtime.getTime() - ms) / 1000 / 60) > IOSESSION_TIMEOUT_MIN) {
+                for (Map.Entry<String, StationInfo> entry : stationidTostationInfo.entrySet()) {
+                    if (Math.abs((entry.getValue().stationState.commtime.getTime() - ms) / 1000 / 60) > IOSESSION_TIMEOUT_MIN) {
                         if (entry.getValue().ioSession != null) {
                             entry.getValue().ioSession.close(true);
                             System.out.println("Time Out:" + entry.getKey());
@@ -138,10 +137,7 @@ public class AppConfig {
         List<WebConfig> webconfigs = DbUtil.dbMapperUtil.webConfigMapper.selectAll();
         for (int i = 0; i < webconfigs.size(); i++) {
             WebConfig webconfig = webconfigs.get(i);
-            if (keyToWebconfigByStationid.get(webconfig.stationid) == null) {
-                keyToWebconfigByStationid.put(webconfig.stationid, new HashMap<>());
-            }
-            keyToWebconfigByStationid.get(webconfig.stationid).put(webconfig.key, webconfig);
+            stationidTostationInfo.get(webconfig.stationid).keyToWebconfig.put(webconfig.key, webconfig);
         }
         Layui.initListCols();
         appConfig = this;

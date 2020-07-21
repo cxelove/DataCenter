@@ -2,12 +2,12 @@ package com.ldchina.datacenter.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ldchina.datacenter.AppConfig;
-import com.ldchina.datacenter.dao.entity.StationInfo;
+import com.ldchina.datacenter.dao.entity.StationState;
 import com.ldchina.datacenter.dao.entity.WebConfig;
 import com.ldchina.datacenter.sensor.ChannelInfo;
 import com.ldchina.datacenter.types.DataInfo;
 import com.ldchina.datacenter.types.Layui;
-import com.ldchina.datacenter.types.StationStatus;
+import com.ldchina.datacenter.types.StationInfo;
 import com.ldchina.datacenter.utils.DbUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,45 +52,10 @@ public class CreateStationController {
 
 
 
-//            ChannelInfo channelInfo= entry.getValue();
-//            if(channelInfo.content==null)
-//                availableChannel.put(channelInfo.key
-//                        +"*"+channelInfo._SensorName
-//                        +"*"+channelInfo.name, Boolean.FALSE);
-
-
-//        switch(protocol){
-//            case "FRT":
-////                for(Map.Entry<String, Boolean> entry : AppConfig.keyToMeasurementDescription.entrySet()){
-////                    Map<Integer,ChannelInfo> mapchinfo= entry.getValue();
-////                    for(Map.Entry chinfomap : mapchinfo.entrySet()){
-////                        chinfomap.setValue(JSON.toJavaObject((JSONObject )chinfomap.getValue(),ChannelInfo.class));
-////
-////                    }
-////                    frtchannelconfig.put(entry.getKey(),entry.getValue());
-////                }
-//                break;
         }
         return (JSONObject) JSONObject.toJSON(availableChannel);
     }
-//    private static final String slat = "&%5123***&&%%$$#@";
-//    public static String md5(String dataStr) {
-//        try {
-//            dataStr = dataStr + slat;
-//            MessageDigest m = MessageDigest.getInstance("MD5");
-//            m.update(dataStr.getBytes("UTF8"));
-//            byte s[] = m.digest();
-//            String result = "";
-//            for (int i = 0; i < s.length; i++) {
-//                result += Integer.toHexString((0x000000FF & s[i]) | 0xFFFFFF00).substring(6);
-//            }
-//            return result;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        return null;
-//    }
+
     @RequestMapping(value = "/api/createStation",method = RequestMethod.POST)
     @ResponseBody
     private JSONObject createStationDo(@RequestBody String json)
@@ -98,13 +63,13 @@ public class CreateStationController {
     {
         String sql, sqlDataTableString, sqlConfigTableString;
         try{
-            JSONObject stationInfo=JSONObject.parseObject(json);
-            String stationid = (String)stationInfo.get("stationid");
-            String stationname= (String)stationInfo.get("stationname");
-            String protocol = (String) stationInfo.get("protocol");
-            stationInfo.remove("stationid");
-            stationInfo.remove("stationname");
-            stationInfo.remove("protocol");
+            JSONObject stationState=JSONObject.parseObject(json);
+            String stationid = (String)stationState.get("stationid");
+            String stationname= (String)stationState.get("stationname");
+            String protocol = (String) stationState.get("protocol");
+            stationState.remove("stationid");
+            stationState.remove("stationname");
+            stationState.remove("protocol");
 
             String measure = "";
 
@@ -116,7 +81,7 @@ public class CreateStationController {
                     + ", `createtime` DATETIME DEFAULT CURRENT_TIMESTAMP " + ", `ps` VARCHAR DEFAULT NULL ";
 
             List<WebConfig> webConfigs = new LinkedList<>();
-            Set<String> keySet= stationInfo.keySet();
+            Set<String> keySet= stationState.keySet();
             for (String key : keySet) {
                 WebConfig webConfig = new WebConfig();
                 webConfig.stationid = stationid;
@@ -143,15 +108,15 @@ public class CreateStationController {
             DbUtil.dbMapperUtil.iSqlMapper.sqlput(sqlDataTableString);
             DbUtil.dbMapperUtil.iSqlMapper.sqlput(sqlConfigTableString);
             DbUtil.dbMapperUtil.iSqlMapper.sqlput("commit");
-            StationInfo qxStation = new StationInfo();
+            StationState qxStation = new StationState();
             qxStation.stationid = stationid;
             qxStation.protocol = protocol;
             qxStation.measure = measure;
             qxStation.alias = stationname;
 
-
-            AppConfig.keyToWebconfigByStationid.put(stationid, stringWebConfigMap);
-            AppConfig.stationidTostationStatus.put(stationid,  new StationStatus(new DataInfo(stationid),qxStation));
+            StationInfo stationInfo = new StationInfo(new DataInfo(stationid),qxStation);
+            stationInfo.keyToWebconfig = stringWebConfigMap;
+            AppConfig.stationidTostationInfo.put(stationid,  stationInfo);
             Layui.initListCols();
 
         }catch (Exception ex){
