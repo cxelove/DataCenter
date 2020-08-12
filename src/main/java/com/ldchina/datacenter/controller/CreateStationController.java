@@ -77,7 +77,9 @@ public class CreateStationController {
 
             sqlConfigTableString = "insert into `web_config` (`stationid`, `key`) values ";
             sqlDataTableString = "CREATE TABLE IF NOT EXISTS data_" + stationid
-                    + " ( `id` BIGINT NOT NULL AUTO_INCREMENT " + ", `obtime` DATETIME PRIMARY KEY "
+                    + " ( `id` BIGINT NOT NULL AUTO_INCREMENT "
+                    + ", `stationid` VARCHAR NOT NULL DEFAULT " +stationid
+                    + ", `obtime` DATETIME PRIMARY KEY "
                     + ", `createtime` DATETIME DEFAULT CURRENT_TIMESTAMP " + ", `ps` VARCHAR DEFAULT NULL ";
 
             List<WebConfig> webConfigs = new LinkedList<>();

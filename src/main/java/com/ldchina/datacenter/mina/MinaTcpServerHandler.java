@@ -43,6 +43,7 @@ public class MinaTcpServerHandler extends IoHandlerAdapter {
 //        byte[] bytes = new byte[ioBuffer.limit()];
 //        ioBuffer.get(bytes);
 //        TxtUtil.getEncoding(bytes);
+        log.info(message.toString());
         ProcThread.procCachedThreadPool.execute(new ProcThread(session, message.toString()));
 
 //    	 String msg = message.toString();

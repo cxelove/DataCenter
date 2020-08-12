@@ -274,7 +274,7 @@ public class ProcThread implements Runnable {
                 if (null != subKeyToChannel) {
                     Set subKeys = subKeyToChannel.keySet();
                     for (int j = 0; j < subKeys.size(); j++) {
-                        if (subKeys.contains(ss[posion])) {
+                        if (subKeys.contains(ss[posion])) { 
                             ChannelInfo channelInfo = subKeyToChannel.get(ss[posion]);
                             String sqlK = "_" + mainKey + "_" + ss[posion];
                             if (AppConfig.stationidTostationInfo.get(dataInfo.stationid)
@@ -317,7 +317,7 @@ public class ProcThread implements Runnable {
                 DbUtil.dbMapperUtil.qxReuploadMapper.delete(dataInfo.stationid, dataInfo.obtime);
             } else {
                 /*数据和缓存比如果数据是新的则更新缓存，插入最新数据表*/
-                System.out.println("更新缓存：" + insertLatestData(dataInfo));
+                insertLatestData(dataInfo);
                 if (diff > 1) {
                     // 说明中间有断报
                     double insCount = (diff > 1440 * 31) ? (1440 * 31) : diff;// 最多补31天历史记录
@@ -332,7 +332,7 @@ public class ProcThread implements Runnable {
 
 
         } catch (Exception ex) {
-            log.error("LMDS4 DataProc Err:", ex.getMessage());
+            log.error("LMDS4 DataProc Err:", ex);
             ex.printStackTrace();
         }
     }
@@ -371,20 +371,6 @@ public class ProcThread implements Runnable {
         AppConfig.stationidTostationInfo.get(stationid).ioSession = ioSession;
         ioSessionToStationId.put(ioSession, stationid);
     }
-
-    /**
-     * @param dataInfo
-     */
-//    void procDatabase(DataInfo dataInfo) {
-//        StatusNo sn = insertData(dataInfo);
-//        System.out.println("插入数据：" + sn);
-//        if (sn != StatusNo.OK) return;
-//        /*数据和缓存比如果数据是新的则更新缓存，插入最新数据表*/
-//        if (AppConfig.stationidTostationStatus.get(dataInfo.STATIONID).dataInfo.OBTIME.before(dataInfo.OBTIME)) {
-//            System.out.println("更新缓存：" + insertLatestData(dataInfo));
-//        }
-//    }
-
     /**
      * 插入数据库latest表，处理最新数据缓存
      *

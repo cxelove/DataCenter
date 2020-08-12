@@ -1,7 +1,7 @@
 package com.ldchina.datacenter.utils;
 
 import org.apache.mina.filter.codec.textline.LineDelimiter;
-import org.mozilla.universalchardet.UniversalDetector;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
@@ -12,25 +12,6 @@ import java.util.Date;
 
 public class TxtUtil {
 	private final static Logger log = LoggerFactory.getLogger(TxtUtil.class);
-    /**
-     * 获取文件编码类型
-     *
-     * @param bytes 文件bytes数组
-     * @return      编码类型
-     */
-    public static String getEncoding(byte[] bytes) {
-        String defaultEncoding = "UTF-8";
-        UniversalDetector detector = new UniversalDetector(null);
-        detector.handleData(bytes, 0, bytes.length);
-        detector.dataEnd();
-        String encoding = detector.getDetectedCharset();
-        detector.reset();
-        log.info("字符编码是：{}", encoding);
-        if (encoding == null) {
-            encoding = defaultEncoding;
-        }
-        return encoding;
-    }
 
 	/**
 	 * 存储原始报文在时间指定的行

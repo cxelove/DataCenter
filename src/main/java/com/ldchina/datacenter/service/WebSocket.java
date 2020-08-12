@@ -2,6 +2,7 @@ package com.ldchina.datacenter.service;
 
 import com.ldchina.datacenter.AppConfig;
 
+import org.apache.mina.core.buffer.IoBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 @ServerEndpoint("/websocket")
@@ -104,8 +106,14 @@ public class WebSocket {
         } else {
             if (stationId != null) {
                 if (AppConfig.stationidTostationInfo.get(stationId).ioSession != null) {
-                AppConfig.stationidTostationInfo.get(stationId).ioSession.write(message);
-                    log.info("SendToClient: " + stationId + ": " + message);
+                   try{
+                       byte[] gbk = (message+"\r\n").getBytes("gb2312");
+                       AppConfig.stationidTostationInfo.get(stationId).ioSession.write(IoBuffer.wrap(gbk));
+
+                       log.info("SendToClient: " + stationId + ": " + message);
+                   }catch (UnsupportedEncodingException e){
+
+                   }
                 }
             }
         }

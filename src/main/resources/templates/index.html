@@ -64,15 +64,15 @@
                 layer.closeAll();
                 layerindex = -1;
             }
-            // layerindex = layer.open({
-            //     type: 2,
-            //     title: "[ " + this.getAttribute("data-id") + " ]",
-            //     shadeClose: true,
-            //     shade: false,
-            //     maxmin: true, //开启最大化最小化按钮
-            //     area: [window.top.innerWidth + "px", window.top.innerHeight + "px"],
-            //     content: 'detail?stationid=' + this.getAttribute("data-id")
-            // });
+            layerindex = layer.open({
+                type: 2,
+                title: "[ " + this.getAttribute("data-id") + " ]",
+                shadeClose: true,
+                shade: false,
+                maxmin: true, //开启最大化最小化按钮
+                area: [window.top.innerWidth + "px", window.top.innerHeight + "px"],
+                content: 'detail?stationid=' + this.getAttribute("data-id")
+            });
         });
         element.on('nav(rightmenu)', function (elem) {
             layer.closeAll();
